@@ -17,6 +17,7 @@ using Bicep.Core.TypeSystem;
 using Bicep.Core.TypeSystem.Az;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Bicep.Core.Resources;
 
 namespace Bicep.Core.Emit
 {
@@ -376,20 +377,48 @@ namespace Bicep.Core.Emit
                 throw new InvalidOperationException("nested loops are not supported");
             }
 
-            emitter.EmitProperty("type", typeReference.FullyQualifiedType);
-            emitter.EmitProperty("apiVersion", typeReference.ApiVersion);
-            if (context.SemanticModel.EmitLimitationInfo.ResourceScopeData.TryGetValue(resourceSymbol, out var scopeData))
+            if (typeReference.Extension == BicepExtension.Az)
             {
-                ScopeHelper.EmitResourceScopeProperties(context.SemanticModel.TargetScope, scopeData, emitter, body);
+                emitter.EmitProperty("type", typeReference.FullyQualifiedType);
+                emitter.EmitProperty("apiVersion", typeReference.ApiVersion);
+                if (context.SemanticModel.EmitLimitationInfo.ResourceScopeData.TryGetValue(resourceSymbol, out var scopeData))
+                {
+                    ScopeHelper.EmitResourceScopeProperties(context.SemanticModel.TargetScope, scopeData, emitter, body);
+                }
+
+                emitter.EmitProperty("name", emitter.GetFullyQualifiedResourceName(resourceSymbol));
+
+                emitter.EmitObjectProperties((ObjectSyntax)body, ResourcePropertiesToOmit);
             }
+            else
+            {
+                emitter.EmitProperty("type", $"Microsoft.CustomProviders/resourceProviders/resources");
+                emitter.EmitProperty("name", $"extensibilityProxy/{resourceSymbol.Name}");
+                emitter.EmitProperty("apiVersion", "2018-09-01-preview");
 
-            emitter.EmitProperty("name", emitter.GetFullyQualifiedResourceName(resourceSymbol));
+                jsonWriter.WritePropertyName("properties");
+                jsonWriter.WriteStartObject();
+                {
+                    emitter.EmitProperty("proxyType", typeReference.FormatName());
 
-            emitter.EmitObjectProperties((ObjectSyntax)body, ResourcePropertiesToOmit);
+                    jsonWriter.WritePropertyName("proxyProperties");
+                    jsonWriter.WriteStartObject();
+                    {
+                        emitter.EmitObjectProperties((ObjectSyntax)body);
+                    }
+                    jsonWriter.WriteEndObject();
+                }
+                jsonWriter.WriteEndObject();
+            }
 
             this.EmitDependsOn(jsonWriter, resourceSymbol, emitter, body);
 
             jsonWriter.WriteEndObject();
+        }
+
+        private static void EmitExtensibleResourceProperties()
+        {
+
         }
 
         private static void EmitModuleParameters(JsonTextWriter jsonWriter, ModuleSymbol moduleSymbol, ExpressionEmitter emitter)

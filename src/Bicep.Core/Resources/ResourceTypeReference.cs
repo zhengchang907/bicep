@@ -10,27 +10,26 @@ using Bicep.Core.Extensions;
 
 namespace Bicep.Core.Resources
 {
+    public enum BicepExtension
+    {
+        Az = 1,
+        Aad,
+    }
+
     public class ResourceTypeReference
     {
         private static readonly RegexOptions PatternRegexOptions = RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled | RegexOptions.CultureInvariant;
+
+        private static readonly Regex ExtensibleResourceTypePattern = new Regex(@"^(?<extension>[a-z]+)://(?<type>[a-z0-9]+)@(?<version>[0-9\.]+)$", PatternRegexOptions);
         private static readonly Regex ResourceTypePattern = new Regex(@"^(?<namespace>[a-z0-9][a-z0-9\.]*)(/(?<type>[a-z0-9\-]+))+@(?<version>[a-z0-9\-])*?", PatternRegexOptions);
 
         private static readonly Regex VersionedResourceTypePattern = new Regex(@"^(?<namespace>[a-z0-9][a-z0-9\.]*)(/(?<type>[a-z0-9\-]+))+@(?<version>(\d{4}-\d{2}-\d{2})(-(preview|alpha|beta|rc|privatepreview))?$)", PatternRegexOptions);
 
         private static readonly Regex SingleTypePattern = new Regex(@"^(?<type>[a-z0-9\-]+)(@(?<version>(\d{4}-\d{2}-\d{2})(-(preview|alpha|beta|rc|privatepreview))?))?$", PatternRegexOptions);
 
-        public ResourceTypeReference(string @namespace, IEnumerable<string> types, string apiVersion)
+        public ResourceTypeReference(BicepExtension extension, string @namespace, IEnumerable<string> types, string apiVersion)
         {
-            if (String.IsNullOrWhiteSpace(@namespace))
-            {
-                throw new ArgumentException("Namespace must not be null, empty or whitespace.");
-            }
-
-            if (String.IsNullOrWhiteSpace(apiVersion))
-            {
-                throw new ArgumentException("API Version must not be null, empty or whitespace.");
-            }
-
+            this.Extension = extension;
             this.Namespace = @namespace;
             this.Types = types.ToImmutableArray();
             if (this.Types.Length <= 0)
@@ -40,6 +39,8 @@ namespace Bicep.Core.Resources
 
             this.ApiVersion = apiVersion;
         }
+
+        public BicepExtension Extension { get; }
 
         public string Namespace { get; }
 
@@ -86,7 +87,7 @@ namespace Bicep.Core.Resources
                 }
             }
 
-            return new ResourceTypeReference(baseType.Namespace, types, bestVersion);
+            return new ResourceTypeReference(baseType.Extension, baseType.Namespace, types, bestVersion);
         }
 
         public static ResourceTypeReference? TryParse(string resourceType)
@@ -94,6 +95,12 @@ namespace Bicep.Core.Resources
             var match = VersionedResourceTypePattern.Match(resourceType);
             if (match.Success == false)
             {
+                var extensibleMatch = ExtensibleResourceTypePattern.Match(resourceType);
+                if (extensibleMatch.Success && Enum.TryParse(extensibleMatch.Groups["extension"].Value, true, out BicepExtension extension))
+                {
+                    return new ResourceTypeReference(extension, "", extensibleMatch.Groups["type"].Value.AsEnumerable(), extensibleMatch.Groups["version"].Value); 
+                }
+
                 return null;
             }
 
@@ -101,7 +108,7 @@ namespace Bicep.Core.Resources
             var types = match.Groups["type"].Captures.Cast<Capture>().Select(c => c.Value);
             var version = match.Groups["version"].Value;
 
-            return new ResourceTypeReference(ns, types, version);
+            return new ResourceTypeReference(BicepExtension.Az, ns, types, version);
         }
 
         public static ResourceTypeReference Parse(string resourceType)

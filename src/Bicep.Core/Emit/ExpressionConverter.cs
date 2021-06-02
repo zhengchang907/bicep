@@ -175,7 +175,17 @@ namespace Bicep.Core.Emit
             LanguageExpression? ConvertResourcePropertyAccess(ResourceSymbol resourceSymbol, SyntaxBase? indexExpression)
             {
                 var typeReference = resourceSymbol.GetResourceTypeReference();
-                
+
+                if (typeReference.Extension != BicepExtension.Az)
+                {
+                    var resourceId = GetFullyQualifiedResourceId(resourceSymbol);
+
+                    return AppendProperties(
+                        CreateFunction(
+                            "reference",
+                            GetFullyQualifiedResourceId(resourceSymbol)),
+                        new JTokenExpression("proxyProperties"));
+                }
 
                 // special cases for certain resource property access. if we recurse normally, we'll end up
                 // generating statements like reference(resourceId(...)).id which are not accepted by ARM
@@ -297,6 +307,14 @@ namespace Bicep.Core.Emit
 
         public IEnumerable<LanguageExpression> GetResourceNameSegments(ResourceSymbol resourceSymbol, ResourceTypeReference typeReference)
         {
+            if (typeReference.Extension != BicepExtension.Az)
+            {
+                return new LanguageExpression[] {
+                    new JTokenExpression("extensibilityProxy"),
+                    new JTokenExpression(resourceSymbol.Name),
+                };
+            }            
+
             var ancestors = this.context.SemanticModel.ResourceAncestors.GetAncestors(resourceSymbol);
             var nameSyntax = GetResourceNameSyntax(resourceSymbol);
             var nameExpression = ConvertExpression(nameSyntax);
@@ -374,6 +392,11 @@ namespace Bicep.Core.Emit
             return resourceSymbol.UnsafeGetBodyPropertyValue(LanguageConstants.ResourceNamePropertyName);
         }
 
+        public static SyntaxBase? TryGetResourceNameSyntax(ResourceSymbol resourceSymbol)
+        {
+            return resourceSymbol.SafeGetBodyPropertyValue(LanguageConstants.ResourceNamePropertyName);
+        }
+
         private LanguageExpression GetModuleNameExpression(ModuleSymbol moduleSymbol)
         {
             SyntaxBase nameValueSyntax = GetModuleNameSyntax(moduleSymbol);
@@ -394,7 +417,7 @@ namespace Bicep.Core.Emit
                 context,
                 this,
                 context.ResourceScopeData[resourceSymbol],
-                typeReference.FullyQualifiedType,
+                (typeReference.Extension == BicepExtension.Az) ? typeReference.FullyQualifiedType : "Microsoft.CustomProviders/resourceProviders/resources",
                 GetResourceNameSegments(resourceSymbol, typeReference));
         }
 
@@ -406,7 +429,7 @@ namespace Bicep.Core.Emit
                 context,
                 this,
                 context.ResourceScopeData[resourceSymbol],
-                typeReference.FullyQualifiedType,
+                (typeReference.Extension == BicepExtension.Az) ? typeReference.FullyQualifiedType : "Microsoft.CustomProviders/resourceProviders/resources",
                 GetResourceNameSegments(resourceSymbol, typeReference));
         }
 

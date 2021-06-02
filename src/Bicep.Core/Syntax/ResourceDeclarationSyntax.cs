@@ -10,6 +10,7 @@ using Bicep.Core.Parsing;
 using Bicep.Core.Resources;
 using Bicep.Core.Semantics;
 using Bicep.Core.TypeSystem;
+using Bicep.Core.TypeSystem.Extensibility;
 
 namespace Bicep.Core.Syntax
 {
@@ -192,7 +193,13 @@ namespace Bicep.Core.Syntax
                 flags |= ResourceTypeGenerationFlags.PermitLiteralNameProperty;
             }
 
-            return resourceTypeProvider.GetType(typeReference, flags);
+            var extensibleTypeProvider = typeReference.Extension switch {
+                BicepExtension.Az => resourceTypeProvider,
+                BicepExtension.Aad => new AadResourceTypeProvider(),
+                _ => throw new InvalidOperationException($"Unrecognized extension {typeReference.Extension}."),
+            };
+
+            return extensibleTypeProvider.GetType(typeReference, flags);
         }
 
         public ObjectSyntax? TryGetBody() =>

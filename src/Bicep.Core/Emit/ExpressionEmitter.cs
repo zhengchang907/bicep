@@ -92,7 +92,11 @@ namespace Bicep.Core.Emit
 
         public void EmitUnqualifiedResourceId(ResourceSymbol resourceSymbol, SyntaxBase? indexExpression, SyntaxBase newContext)
         {
-            var converterForContext = converter.CreateConverterForIndexReplacement(ExpressionConverter.GetResourceNameSyntax(resourceSymbol), indexExpression, newContext);
+            var converterForContext = this.converter;
+            if (ExpressionConverter.TryGetResourceNameSyntax(resourceSymbol) is {} nameSyntax)
+            {
+                converterForContext = this.converter.CreateConverterForIndexReplacement(nameSyntax, indexExpression, newContext);
+            }
 
             var unqualifiedResourceId = converterForContext.GetUnqualifiedResourceId(resourceSymbol);
             var serialized = ExpressionSerializer.SerializeExpression(unqualifiedResourceId);
@@ -102,7 +106,11 @@ namespace Bicep.Core.Emit
 
         public void EmitResourceIdReference(ResourceSymbol resourceSymbol, SyntaxBase? indexExpression, SyntaxBase newContext)
         {
-            var converterForContext = this.converter.CreateConverterForIndexReplacement(ExpressionConverter.GetResourceNameSyntax(resourceSymbol), indexExpression, newContext);
+            var converterForContext = this.converter;
+            if (ExpressionConverter.TryGetResourceNameSyntax(resourceSymbol) is {} nameSyntax)
+            {
+                converterForContext = this.converter.CreateConverterForIndexReplacement(nameSyntax, indexExpression, newContext);
+            }
 
             var resourceIdExpression = converterForContext.GetFullyQualifiedResourceId(resourceSymbol);
             var serialized = ExpressionSerializer.SerializeExpression(resourceIdExpression);

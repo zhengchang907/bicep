@@ -10,7 +10,6 @@ using Bicep.Core.Emit;
 
 namespace Bicep.Core.TypeSystem.Az
 {
-
     public class AzResourceTypeProvider : IResourceTypeProvider
     {
         public static IResourceTypeProvider CreateWithAzTypes()
