@@ -184,7 +184,8 @@ namespace Bicep.Core.Emit
                         CreateFunction(
                             "reference",
                             GetFullyQualifiedResourceId(resourceSymbol)),
-                        new JTokenExpression("proxyProperties"));
+                        new JTokenExpression("proxyProperties"),
+                        new JTokenExpression(propertyAccess.PropertyName.IdentifierName));
                 }
 
                 // special cases for certain resource property access. if we recurse normally, we'll end up
@@ -309,8 +310,8 @@ namespace Bicep.Core.Emit
         {
             if (typeReference.Extension != BicepExtension.Az)
             {
+                // TODO(extensibility) Add extensibility point to return 'unique' identifier - this is obviously a hack
                 return new LanguageExpression[] {
-                    new JTokenExpression("extensibilityProxy"),
                     new JTokenExpression(resourceSymbol.Name),
                 };
             }            
@@ -417,7 +418,7 @@ namespace Bicep.Core.Emit
                 context,
                 this,
                 context.ResourceScopeData[resourceSymbol],
-                (typeReference.Extension == BicepExtension.Az) ? typeReference.FullyQualifiedType : "Microsoft.CustomProviders/resourceProviders/resources",
+                (typeReference.Extension == BicepExtension.Az) ? typeReference.FullyQualifiedType : "Extensibility.Proxy/proxyType",
                 GetResourceNameSegments(resourceSymbol, typeReference));
         }
 
@@ -429,7 +430,7 @@ namespace Bicep.Core.Emit
                 context,
                 this,
                 context.ResourceScopeData[resourceSymbol],
-                (typeReference.Extension == BicepExtension.Az) ? typeReference.FullyQualifiedType : "Microsoft.CustomProviders/resourceProviders/resources",
+                (typeReference.Extension == BicepExtension.Az) ? typeReference.FullyQualifiedType : "Extensibility.Proxy/proxyType",
                 GetResourceNameSegments(resourceSymbol, typeReference));
         }
 

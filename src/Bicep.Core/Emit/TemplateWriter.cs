@@ -392,9 +392,10 @@ namespace Bicep.Core.Emit
             }
             else
             {
-                emitter.EmitProperty("type", $"Microsoft.CustomProviders/resourceProviders/resources");
-                emitter.EmitProperty("name", $"extensibilityProxy/{resourceSymbol.Name}");
-                emitter.EmitProperty("apiVersion", "2018-09-01-preview");
+                emitter.EmitProperty("type", $"Extensibility.Proxy/proxyType");
+                // TODO(extensibility) Add extensibility point to return 'unique' identifier - this is obviously a hack
+                emitter.EmitProperty("name", $"{resourceSymbol.Name}");
+                emitter.EmitProperty("apiVersion", "2021-01-01");
 
                 jsonWriter.WritePropertyName("properties");
                 jsonWriter.WriteStartObject();

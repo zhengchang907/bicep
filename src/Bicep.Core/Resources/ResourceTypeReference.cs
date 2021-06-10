@@ -54,7 +54,10 @@ namespace Bicep.Core.Resources
         public string FullyQualifiedType => $"{this.Namespace}/{this.TypesString}";
 
         public string FormatName()
-            => $"{this.FullyQualifiedType}@{this.ApiVersion}";
+            => this.Extension switch {
+                BicepExtension.Az => $"{this.FullyQualifiedType}@{this.ApiVersion}",
+                _ => $"{this.Extension.ToString().ToLowerInvariant()}://{this.TypesString}@{this.ApiVersion}",
+            };
 
         public bool IsRootType => Types.Length == 1;
 
