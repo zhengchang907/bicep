@@ -13,6 +13,7 @@ namespace Bicep.Core.Resources
     public enum BicepExtension
     {
         Az = 1,
+        K8s,
         Aad,
     }
 

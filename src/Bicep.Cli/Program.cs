@@ -40,7 +40,7 @@ namespace Bicep.Cli
             Console.OutputEncoding = TemplateEmitter.UTF8EncodingWithoutBom;
 
             BicepDeploymentsInterop.Initialize();
-            var program = new Program(AzResourceTypeProvider.CreateWithAzTypes(), Console.Out, Console.Error, ThisAssembly.AssemblyFileVersion);
+            var program = new Program(new CombinedResourceTypeProvider(), Console.Out, Console.Error, ThisAssembly.AssemblyFileVersion);
             return program.Run(args);
         }
 

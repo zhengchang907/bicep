@@ -1,0 +1,51 @@
+{
+    "folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../msazure/AzureUX-ARM"
+		},
+		{
+			"path": "../../msazure/AzureUX-Deployments"
+		}
+	],
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "Build ARM",
+				"command": "msbuild",
+				"args": [
+					"src/frontdoor/LocalDeploymentEngine"
+				],
+				"type": "shell",
+				"options": {
+					"cwd": "../../msazure/AzureUX-ARM",
+					"shell": {
+						"executable": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\Common7\\Tools\\VsDevCmd.bat",
+						"args": [
+							"&"
+						]
+					}
+				},
+				"problemMatcher": ["$msCompile"]
+			},
+			{
+				"label": "Build Deployments",
+				"command": "msbuild",
+				"type": "shell",
+				"options": {
+					"cwd": "../../msazure/AzureUX-Deployments",
+					"shell": {
+						"executable": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\Common7\\Tools\\VsDevCmd.bat",
+						"args": [
+							"&"
+						]
+					}
+				},
+				"problemMatcher": ["$msCompile"]
+			}
+		]
+	}
+}

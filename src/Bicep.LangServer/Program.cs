@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Bicep.Core.FileSystem;
+using Bicep.Core.TypeSystem;
 using Bicep.Core.TypeSystem.Az;
 
 namespace Bicep.LanguageServer
@@ -20,7 +21,7 @@ namespace Bicep.LanguageServer
                     Console.OpenStandardOutput(),
                     new Server.CreationOptions
                     {
-                        ResourceTypeProvider = AzResourceTypeProvider.CreateWithAzTypes(),
+                        ResourceTypeProvider = new CombinedResourceTypeProvider(),
                         FileResolver = new FileResolver()
                     });
 

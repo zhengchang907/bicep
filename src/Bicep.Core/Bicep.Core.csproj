@@ -26,6 +26,11 @@
 		<PackageReference Include="Azure.Bicep.Types" Version="0.1.157" />
 		<PackageReference Include="Azure.Bicep.Types.Az" Version="0.1.157" />
 	</ItemGroup>
+ 	<ItemGroup>
+		<ProjectReference Include="../Bicep.Extensibility/Bicep.Extensibility.csproj" />
+		<ProjectReference Include="../Bicep.Extensibility.Aad/Bicep.Extensibility.Aad.csproj" />
+		<ProjectReference Include="../Bicep.Extensibility.K8s/Bicep.Extensibility.K8s.csproj" />
+ 	</ItemGroup>
 	<ItemGroup>
 		<Compile Update="CoreResources.Designer.cs">
 			<DesignTime>True</DesignTime>

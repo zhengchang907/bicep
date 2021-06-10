@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>Bicep.Extensibility</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- This project should not have any Bicep compiler dependencies; imagine it's living in an entirely different repo. -->
+    <PackageReference Include="Azure.Bicep.Types" Version="0.1.157" />
+  </ItemGroup>
+
+</Project>

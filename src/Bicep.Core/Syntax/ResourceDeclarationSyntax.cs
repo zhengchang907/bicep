@@ -11,6 +11,8 @@ using Bicep.Core.Resources;
 using Bicep.Core.Semantics;
 using Bicep.Core.TypeSystem;
 using Bicep.Core.TypeSystem.Extensibility;
+using Bicep.Extensibility.Aad;
+using Bicep.Extensibility.K8s;
 
 namespace Bicep.Core.Syntax
 {
@@ -195,7 +197,8 @@ namespace Bicep.Core.Syntax
 
             var extensibleTypeProvider = typeReference.Extension switch {
                 BicepExtension.Az => resourceTypeProvider,
-                BicepExtension.Aad => new AadResourceTypeProvider(),
+                BicepExtension.Aad => new ExtensibilityResourceTypeProvider(new AadExtensibilityProvider()),
+                BicepExtension.K8s => new ExtensibilityResourceTypeProvider(new K8sExtensibilityProvider()),
                 _ => throw new InvalidOperationException($"Unrecognized extension {typeReference.Extension}."),
             };
 

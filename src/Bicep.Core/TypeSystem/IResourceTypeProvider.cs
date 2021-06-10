@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Bicep.Core.Resources;
 
 namespace Bicep.Core.TypeSystem

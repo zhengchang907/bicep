@@ -83,7 +83,7 @@ namespace Bicep.LanguageServer
         {
             // using type based registration so dependencies can be injected automatically
             // without manually constructing up the graph
-            services.AddSingleton<IResourceTypeProvider>(services => creationOptions.ResourceTypeProvider ?? AzResourceTypeProvider.CreateWithAzTypes());
+            services.AddSingleton<IResourceTypeProvider>(services => creationOptions.ResourceTypeProvider ?? new CombinedResourceTypeProvider());
             services.AddSingleton<ISnippetsProvider>(services => creationOptions.SnippetsProvider ?? new SnippetsProvider());
             services.AddSingleton<IFileResolver>(services => creationOptions.FileResolver ?? new FileResolver());
             services.AddSingleton<ITelemetryProvider, TelemetryProvider>();

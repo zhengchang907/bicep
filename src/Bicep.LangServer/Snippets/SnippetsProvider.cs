@@ -182,7 +182,7 @@ namespace Bicep.LanguageServer.Snippets
                 ImmutableDictionary.Create<ModuleDeclarationSyntax, SyntaxTree>(),
                 ImmutableDictionary.Create<ModuleDeclarationSyntax, DiagnosticBuilder.ErrorBuilderDelegate>());
 
-            Compilation compilation = new Compilation(AzResourceTypeProvider.CreateWithAzTypes(), syntaxTreeGrouping);
+            Compilation compilation = new Compilation(new CombinedResourceTypeProvider(), syntaxTreeGrouping);
             SemanticModel semanticModel = compilation.GetEntrypointSemanticModel();
 
             return ResourceDependencyVisitor.GetResourceDependencies(semanticModel);

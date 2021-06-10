@@ -36,7 +36,7 @@ namespace Bicep.Core.UnitTests.Utils
         }
 
         public static CompilationResult Compile(params (string fileName, string fileContents)[] files)
-            => Compile(AzResourceTypeProvider.CreateWithAzTypes(), files);
+            => Compile(new CombinedResourceTypeProvider(), files);
 
         public static CompilationResult Compile(string fileContents)
             => Compile(("main.bicep", fileContents));
