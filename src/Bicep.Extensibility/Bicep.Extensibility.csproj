@@ -8,6 +8,7 @@
   <ItemGroup>
     <!-- This project should not have any Bicep compiler dependencies; imagine it's living in an entirely different repo. -->
     <PackageReference Include="Azure.Bicep.Types" Version="0.1.157" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>

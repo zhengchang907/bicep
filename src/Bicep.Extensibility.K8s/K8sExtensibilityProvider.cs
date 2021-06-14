@@ -3,7 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading.Tasks;
 using Azure.Bicep.Types.Concrete;
+using Newtonsoft.Json.Linq;
 
 namespace Bicep.Extensibility.K8s
 {
@@ -17,5 +19,10 @@ namespace Bicep.Extensibility.K8s
 
         public ResourceType LoadResourceType(string typeName)
             => types[typeName];
+
+        public Task<JToken> UpsertResource(string type, JToken body)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

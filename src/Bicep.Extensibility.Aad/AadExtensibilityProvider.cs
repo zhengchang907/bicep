@@ -3,7 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading.Tasks;
 using Azure.Bicep.Types.Concrete;
+using Newtonsoft.Json.Linq;
 
 namespace Bicep.Extensibility.Aad
 {
@@ -40,5 +42,20 @@ namespace Bicep.Extensibility.Aad
 
         public ResourceType LoadResourceType(string typeName)
             => types[typeName];
+
+        public Task<JToken> UpsertResource(string type, JToken body)
+        {
+            switch (type)
+            {
+                case "aad://application@1.0":
+                    var appBody = body;
+                    break;
+                case "aad://servicePrincipal@1.0":
+                    var spBody = body;
+                    break;
+            }
+
+            return Task.FromResult(body.DeepClone());
+        }
     }
 }
