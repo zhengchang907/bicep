@@ -78,6 +78,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bicep.Extensibility.Aad", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bicep.Extensibility.K8s", "src\Bicep.Extensibility.K8s\Bicep.Extensibility.K8s.csproj", "{633D049A-0E58-4E79-B111-CDAA5D682929}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bicep.Extensibility.IntegrationTests", "src\Bicep.Extensibility.IntegrationTests\Bicep.Extensibility.IntegrationTests.csproj", "{318FC94C-F03E-4A9A-A1A7-ACEE7DD18CC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -156,6 +158,10 @@ Global
 		{633D049A-0E58-4E79-B111-CDAA5D682929}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{633D049A-0E58-4E79-B111-CDAA5D682929}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{633D049A-0E58-4E79-B111-CDAA5D682929}.Release|Any CPU.Build.0 = Release|Any CPU
+		{318FC94C-F03E-4A9A-A1A7-ACEE7DD18CC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{318FC94C-F03E-4A9A-A1A7-ACEE7DD18CC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{318FC94C-F03E-4A9A-A1A7-ACEE7DD18CC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{318FC94C-F03E-4A9A-A1A7-ACEE7DD18CC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -179,6 +185,7 @@ Global
 		{10CD97CF-893A-4F3A-AB54-360EB1B7BEFE} = {9AE68E22-D5DC-43AE-B0F5-F87A284FC911}
 		{D908E721-8AA2-46DE-AAEC-E34E4A90C51E} = {9AE68E22-D5DC-43AE-B0F5-F87A284FC911}
 		{633D049A-0E58-4E79-B111-CDAA5D682929} = {9AE68E22-D5DC-43AE-B0F5-F87A284FC911}
+		{318FC94C-F03E-4A9A-A1A7-ACEE7DD18CC2} = {9AE68E22-D5DC-43AE-B0F5-F87A284FC911}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {21F77282-91E7-4304-B1EF-FADFA4F39E37}
