@@ -17,9 +17,14 @@ namespace Bicep.Extensibility.IntegrationTests
         [TestMethod]
         public async Task UpsertTestAsync()
         {
-            var test = new AadExtensibilityProvider();
-            var updated = await test.UpsertResource("aad://application@1.0", new JObject {
+            var provider = new AadExtensibilityProvider();
+
+            var app = await provider.UpsertResource("aad://application@1.0", new JObject {
                 ["displayName"] = "Bicep Test App"
+            });
+
+            var sp = await provider.UpsertResource("aad://servicePrincipal@1.0", new JObject {
+                ["appId"] = app["appId"],
             });
         }
     }
