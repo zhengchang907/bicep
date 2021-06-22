@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System;
 using System.Collections.Generic;
@@ -180,7 +180,7 @@ namespace Bicep.Extensibility.Aad
                 var postReq = new HttpRequestMessage(HttpMethod.Post, $"https://graph.microsoft.com/v1.0/applications");
                 postReq.Content = new StringContent(body.ToString(), Encoding.UTF8, "application/json");
                 var postResp = await client.SendAsync(postReq);
-                postResp.EnsureSuccessStatusCode();
+                await ThrowOnFailure(postResp);
 
                 var updatedBody = await postResp.Content.ReadAsStringAsync();
                 return JObject.Parse(updatedBody);
@@ -192,11 +192,11 @@ namespace Bicep.Extensibility.Aad
                 var patchReq = new HttpRequestMessage(new HttpMethod("PATCH"), $"https://graph.microsoft.com/v1.0/applications/{appId}");
                 patchReq.Content = new StringContent(body.ToString(), Encoding.UTF8, "application/json");
                 var patchResp = await client.SendAsync(patchReq);
-                patchResp.EnsureSuccessStatusCode();
+                await ThrowOnFailure(patchResp);
 
                 var getReq = new HttpRequestMessage(HttpMethod.Get, $"https://graph.microsoft.com/v1.0/applications/{appId}");
                 var getResp = await client.SendAsync(getReq);
-                getResp.EnsureSuccessStatusCode();
+                await ThrowOnFailure(getResp);
 
                 var updatedBody = await getResp.Content.ReadAsStringAsync();
                 return JObject.Parse(updatedBody);
@@ -220,7 +220,7 @@ namespace Bicep.Extensibility.Aad
                 var postReq = new HttpRequestMessage(HttpMethod.Post, $"https://graph.microsoft.com/v1.0/servicePrincipals");
                 postReq.Content = new StringContent(body.ToString(), Encoding.UTF8, "application/json");
                 var postResp = await client.SendAsync(postReq);
-                postResp.EnsureSuccessStatusCode();
+                await ThrowOnFailure(postResp);
 
                 var updatedBody = await postResp.Content.ReadAsStringAsync();
                 return JObject.Parse(updatedBody);
@@ -232,11 +232,11 @@ namespace Bicep.Extensibility.Aad
                 var patchReq = new HttpRequestMessage(new HttpMethod("PATCH"), $"https://graph.microsoft.com/v1.0/servicePrincipals/{spId}");
                 patchReq.Content = new StringContent(body.ToString(), Encoding.UTF8, "application/json");
                 var patchResp = await client.SendAsync(patchReq);
-                patchResp.EnsureSuccessStatusCode();
+                await ThrowOnFailure(patchResp);
 
                 var getReq = new HttpRequestMessage(HttpMethod.Get, $"https://graph.microsoft.com/v1.0/servicePrincipals/{spId}");
                 var getResp = await client.SendAsync(getReq);
-                getResp.EnsureSuccessStatusCode();
+                await ThrowOnFailure(getResp);
 
                 var updatedBody = await getResp.Content.ReadAsStringAsync();
                 return JObject.Parse(updatedBody);
@@ -252,6 +252,15 @@ namespace Bicep.Extensibility.Aad
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
 
             return client;
+        }
+
+        private static async Task ThrowOnFailure(HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Request {response.RequestMessage.Method} {response.RequestMessage.RequestUri} failed with status code {response.StatusCode}. Content: {content}.");
+            }
         }
     }
 }
