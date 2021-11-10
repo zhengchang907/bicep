@@ -40,12 +40,14 @@ using Bicep.LanguageServer.Telemetry;
 namespace Bicep.LanguageServer.Handlers
 {
     [Method("textDocument/insertResource", Direction.ClientToServer)]
-    public record InsertResourceParams : TextDocumentPositionParams, IRequest
+    public record InsertResourceParams : TextDocumentPositionParams, IRequest<InsertResourceResponse>
     {
         public string? ResourceId { get; init; }
     }
 
-    public class InsertResourceHandler : IJsonRpcNotificationHandler<InsertResourceParams>
+    public record InsertResourceResponse(WorkspaceEdit? Edit);
+
+    public class InsertResourceHandler : IJsonRpcRequestHandler<InsertResourceParams, InsertResourceResponse>
     {
         private readonly ILanguageServerFacade server;
         private readonly ICompilationManager compilationManager;
@@ -62,13 +64,10 @@ namespace Bicep.LanguageServer.Handlers
             this.telemetryProvider = telemetryProvider;
         }
 
-        public async Task<Unit> Handle(InsertResourceParams request, CancellationToken cancellationToken)
+        public async Task<InsertResourceResponse> Handle(InsertResourceParams request, CancellationToken cancellationToken)
         {
-            var context = compilationManager.GetCompilation(request.TextDocument.Uri);
-            if (context is null)
-            {
-                return Unit.Value;
-            }
+            var context = compilationManager.GetCompilation(request.TextDocument.Uri)
+                ?? throw new InvalidOperationException($"Failed to find active compilation for document {request.TextDocument.Uri}");
 
             if (TryParseResourceId(request.ResourceId) is not {} resourceId)
             {
@@ -127,7 +126,19 @@ namespace Bicep.LanguageServer.Handlers
             }, cancellationToken);
 
             telemetryProvider.PostEvent(BicepTelemetryEvent.InsertResourceSuccess(resourceId.FullyQualifiedType, matchedType.ApiVersion));
-            return Unit.Value;
+            return new(new WorkspaceEdit
+                {
+                    Changes = new Dictionary<DocumentUri, IEnumerable<TextEdit>>
+                    {
+                        [request.TextDocument.Uri] = new[] {
+                            new TextEdit
+                            {
+                                Range = replacement.ToRange(context.LineStarts),
+                                NewText = replacement.Text,
+                            },
+                        },
+                    },
+                });
         }
 
         private record InsertContext(

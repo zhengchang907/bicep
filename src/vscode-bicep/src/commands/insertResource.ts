@@ -36,7 +36,7 @@ export class InsertResourceCommand implements Command {
       return;
     }
 
-    await this.client.sendNotification(insertResourceRequestType, {
+    const response = await this.client.sendRequest(insertResourceRequestType, {
       textDocument:
         this.client.code2ProtocolConverter.asTextDocumentIdentifier(document),
       position: this.client.code2ProtocolConverter.asPosition(
@@ -44,5 +44,7 @@ export class InsertResourceCommand implements Command {
       ),
       resourceId: resourceId,
     });
+
+    vscode.workspace.applyEdit(response.workspaceEdit);
   }
 }

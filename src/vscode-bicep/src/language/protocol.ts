@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+import { WorkspaceEdit } from "vscode";
 import {
   Position,
-  ProtocolNotificationType,
   ProtocolRequestType,
   Range,
   TextDocumentIdentifier,
@@ -64,7 +64,14 @@ export interface InsertResourceParams {
   resourceId: string;
 }
 
-export const insertResourceRequestType = new ProtocolNotificationType<
+export interface InsertResourceResponse {
+  workspaceEdit: WorkspaceEdit;
+}
+
+export const insertResourceRequestType = new ProtocolRequestType<
   InsertResourceParams,
+  InsertResourceResponse,
+  never,
+  void,
   void
 >("textDocument/insertResource");
