@@ -4,9 +4,8 @@ import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import { version as buildVersion } from './package.json';
 import path from 'path';
 import exampleIndex from '../../docs/examples/index.json';
-import { Configuration } from 'webpack';
 
-const config: Configuration = {
+module.exports = {
   entry: {
     "main": './src/index.tsx',
   },
@@ -31,6 +30,15 @@ const config: Configuration = {
   },
   resolve: {
     extensions: [ '.tsx', '.ts', '.js' ],
+    alias: {
+      'vscode': require.resolve('@codingame/monaco-languageclient/lib/vscode-compatibility')
+    },
+    fallback: {
+      'crypto': false,
+      'os': false,
+      'path': false,
+      'net': false,
+    },
   },
   plugins: [
     new CopyPlugin({
@@ -53,7 +61,5 @@ const config: Configuration = {
   optimization: {
     // to avoid minimizing files under _framework (Blazor JS files), just turn off minification entirely.
     minimize: false,
-  },
+  }
 };
-
-module.exports = config;

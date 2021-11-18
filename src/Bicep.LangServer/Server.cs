@@ -22,6 +22,8 @@ using Bicep.LanguageServer.Telemetry;
 using Bicep.LanguageServer.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
+using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Server;
 using System;
 using System.Diagnostics;
@@ -45,6 +47,11 @@ namespace Bicep.LanguageServer
             Action<IServiceCollection>? onRegisterServices = null);
 
         private readonly OmnisharpLanguageServer server;
+
+        public Server(PipeReader input, PipeWriter output, CreationOptions creationOptions, Action<LanguageServerOptions> onOptionsFunc)
+            : this(creationOptions, options => onOptionsFunc(options.WithInput(input).WithOutput(output)))
+        {
+        }
 
         public Server(PipeReader input, PipeWriter output, CreationOptions creationOptions)
             : this(creationOptions, options => options.WithInput(input).WithOutput(output))

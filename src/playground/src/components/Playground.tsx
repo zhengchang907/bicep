@@ -1,21 +1,25 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, ButtonGroup, Col, Container, Dropdown, FormControl, Nav, Navbar, OverlayTrigger, Row, Spinner, Tooltip } from 'react-bootstrap';
+import { Button, ButtonGroup, Col, Container, Dropdown, FormControl, Nav, Navbar, NavLink, OverlayTrigger, Row, Spinner, Tooltip } from 'react-bootstrap';
+import { BaseLanguageClient } from '@codingame/monaco-languageclient';
 
 import './playground.css';
-import examples from '../../../docs/examples/index.json';
+import examples from '../../../../docs/examples/index.json';
 import { JsonEditor } from './jsonEditor';
 import { BicepEditor } from './bicepEditor';
-import { copyShareLinkToClipboard, handleShareLink } from './utils';
-import { decompile } from './lspInterop';
+import { copyShareLinkToClipboard, handleShareLink } from '../helpers/utils';
+import { decompile } from '../helpers/lspInterop';
 
-export const Playground : React.FC = () => {
+interface Props {
+  client: BaseLanguageClient,
+}
+
+export const Playground : React.FC<Props> = (props) => {
+  const { client } = props;
   const [jsonContent, setJsonContent] = useState('');
   const [bicepContent, setBicepContent] = useState('');
   const [initialContent, setInitialContent] = useState('');
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [filterText, setFilterText] = useState('');
   const uploadInputRef = useRef<HTMLInputElement>();
 
@@ -98,7 +102,7 @@ export const Playground : React.FC = () => {
     <input type="file" ref={uploadInputRef} style={{ display: 'none' }} onChange={e => handleDecompileClick(e.currentTarget.files[0])} accept="application/json" multiple={false} />
     <Navbar bg="dark" variant="dark">
       <Navbar.Brand>Bicep Playground</Navbar.Brand>
-      <Nav className="ms-auto">
+      <Nav className="ml-auto">
         <OverlayTrigger placement="bottom" overlay={createTooltip('Copy a shareable link to clipboard')}>
           <Button size="sm" variant="primary" className="mx-1" onClick={handlCopyClick}>{copied ? 'Copied' : 'Copy Link'}</Button>
         </OverlayTrigger>
@@ -131,7 +135,7 @@ export const Playground : React.FC = () => {
       </Container> :
       <>
         <div className="playground-editorpane">
-          <BicepEditor onBicepChange={setBicepContent} onJsonChange={setJsonContent} initialCode={initialContent} />
+          <BicepEditor client={client} initialValue={initialContent} onBicepChange={setBicepContent} onJsonChange={setJsonContent} />
         </div>
         <div className="playground-editorpane">
           <JsonEditor content={jsonContent} />

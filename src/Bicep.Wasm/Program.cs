@@ -5,7 +5,6 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.JSInterop;
 
 namespace Bicep.Wasm
 {
@@ -14,11 +13,10 @@ namespace Bicep.Wasm
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            builder.Services.AddSingleton<LspWorker>();
 
-            var jsRuntime = builder.Services.BuildServiceProvider().GetService<IJSRuntime>() ?? throw new InvalidOperationException("Unable to obtain JS runtime.");
-            await jsRuntime.InvokeAsync<object>("BicepInitialize", DotNetObjectReference.Create(new Interop(jsRuntime)));
-
-            await builder.Build().RunAsync();
+            var lspWorker = builder.Services.BuildServiceProvider().GetService<LspWorker>() ?? throw new InvalidOperationException($"Failed to load {nameof(LspWorker)}.");
+            await lspWorker.RunAsync();
         }
     }
 }
