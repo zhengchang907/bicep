@@ -2,19 +2,14 @@
 // Licensed under the MIT License.
 import * as vscode from "vscode";
 import * as lsp from "vscode-languageclient/node";
-import * as path from "path";
-import { existsSync } from "fs";
 import { getLogger } from "../utils/logger";
 import {
   callWithTelemetryAndErrorHandlingSync,
   IActionContext,
   parseError,
 } from "vscode-azureextensionui";
-import { ErrorAction, Message, CloseAction } from "vscode-languageclient/node";
-
-const dotnetRuntimeVersion = "6.0";
-const packagedServerPath = "bicepLanguageServer/Bicep.LangServer.dll";
-const extensionId = "ms-azuretools.vscode-bicep";
+import { ErrorAction, Message, CloseAction, AbstractMessageReader, MessageReader, MessageWriter, AbstractMessageWriter, DataCallback, Disposable } from "vscode-languageclient/node";
+import { initializeInterop, onLspData, sendLspData } from "./lspInterop";
 
 export async function launchLanguageServiceWithProgressReport(
   context: vscode.ExtensionContext,
@@ -35,24 +30,16 @@ async function launchLanguageService(
 ): Promise<lsp.LanguageClient> {
   getLogger().info("Launching Bicep language service...");
 
-  const dotnetCommandPath = await ensureDotnetRuntimeInstalled();
-  getLogger().debug(`Found dotnet command at '${dotnetCommandPath}'.`);
+  await initializeInterop();
 
-  const languageServerPath = ensureLanguageServerExists(context);
-  getLogger().debug(`Found language server at '${languageServerPath}'.`);
+  const serverOptions: lsp.ServerOptions = async () => {
+    const [reader, writer] = createStream();
 
-  const serverExecutable: lsp.Executable = {
-    command: dotnetCommandPath,
-    args: [languageServerPath],
-    options: {
-      env: process.env,
-    },
-  };
-
-  const serverOptions: lsp.ServerOptions = {
-    run: serverExecutable,
-    debug: serverExecutable,
-  };
+    return {
+      reader,
+      writer
+    };
+  }
 
   const clientOptions: lsp.LanguageClientOptions = {
     documentSelector: [{ language: "bicep" }],
@@ -111,41 +98,6 @@ async function launchLanguageService(
   return client;
 }
 
-async function ensureDotnetRuntimeInstalled(): Promise<string> {
-  getLogger().info("Acquiring dotnet runtime...");
-
-  const result = await vscode.commands.executeCommand<{ dotnetPath: string }>(
-    "dotnet.acquire",
-    {
-      version: dotnetRuntimeVersion,
-      requestingExtensionId: extensionId,
-    }
-  );
-
-  if (!result) {
-    const errorMessage = `Failed to install .NET runtime v${dotnetRuntimeVersion}.`;
-
-    getLogger().error(errorMessage);
-    throw new Error(errorMessage);
-  }
-
-  return path.resolve(result.dotnetPath);
-}
-
-function ensureLanguageServerExists(context: vscode.ExtensionContext): string {
-  const languageServerPath =
-    process.env.BICEP_LANGUAGE_SERVER_PATH ?? // Local server for debugging.
-    context.asAbsolutePath(packagedServerPath); // Packaged server.
-
-  if (!existsSync(languageServerPath)) {
-    throw new Error(
-      `Language server does not exist at '${languageServerPath}'.`
-    );
-  }
-
-  return path.resolve(languageServerPath);
-}
-
 function configureTelemetry(client: lsp.LanguageClient) {
   const startTime = Date.now();
   const defaultErrorHandler = client.createDefaultErrorHandler();
@@ -199,4 +151,26 @@ function configureTelemetry(client: lsp.LanguageClient) {
       return defaultErrorHandler.closed();
     },
   };
+}
+
+
+class LspMessageReader extends AbstractMessageReader implements MessageReader {
+  listen(callback: DataCallback): Disposable {
+    onLspData(data => callback(data));
+    return Disposable.create(() => {});
+  }
+}
+
+class LspMessageWriter extends AbstractMessageWriter implements MessageWriter {
+  async write(msg: Message): Promise<void> {
+    sendLspData(msg);
+  }
+  end(): void { }
+}
+
+function createStream() {
+  const reader = new LspMessageReader();
+  const writer = new LspMessageWriter();
+
+  return [reader, writer] as const;
 }

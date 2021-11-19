@@ -47,10 +47,7 @@
             "problemMatcher": "$tsc-watch",
             "options": {
                 "cwd": "${workspaceFolder}/src/vscode-bicep"
-            },
-            "dependsOn": [
-                "Build Language Server for VSIX"
-            ]
+            }
         },
         {
             "label": "Build WASM for Playground",

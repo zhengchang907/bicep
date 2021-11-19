@@ -2,6 +2,15 @@
   "version": 1,
   "dependencies": {
     "net6.0": {
+      "DotNetJS": {
+        "type": "Direct",
+        "requested": "[0.1.0, )",
+        "resolved": "0.1.0",
+        "contentHash": "4omIk9llMYAKPDqaxIHhgvXeGxJd830i1BNdi/hePD0zoLnUKZsFSa8aQdPGlmmNdEC75a4Dy8pOISPNBsK6SQ==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.WebAssembly": "6.0.0"
+        }
+      },
       "Microsoft.AspNetCore.Components.WebAssembly": {
         "type": "Direct",
         "requested": "[6.0.0, )",
