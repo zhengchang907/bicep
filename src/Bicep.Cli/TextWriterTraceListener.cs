@@ -18,12 +18,12 @@ namespace Bicep.Cli
 
         public override void Write(string? message)
         {
-            textWriter.WriteLine($"TRACE: {message}");
+            textWriter.WriteLine($"{DateTime.UtcNow} TRACE: {message}");
         }
 
         public override void WriteLine(string? message)
         {
-            textWriter.WriteLine($"TRACE: {message}");
+            textWriter.WriteLine($"{DateTime.UtcNow} TRACE: {message}");
         }
     }
 }

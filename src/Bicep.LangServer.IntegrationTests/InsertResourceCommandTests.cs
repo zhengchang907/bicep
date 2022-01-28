@@ -32,6 +32,8 @@ using Bicep.Core.Extensions;
 using System.Linq;
 using System;
 using Bicep.LangServer.IntegrationTests.Assertions;
+using Bicep.Core.Registry.Auth;
+using Bicep.Core.UnitTests;
 
 namespace Bicep.LangServer.IntegrationTests
 {
@@ -518,6 +520,67 @@ output myOutput string = 'myOutput'
             {
                 ["failureType"] = "FetchResourceFailure",
             });
+        }
+
+        [TestMethod]
+        public async Task AzCli_timeout_direct_call_no_repro()
+        {
+            var tokenFactory = new TokenCredentialFactory();
+            var resourceProvider = new AzResourceProvider(tokenFactory);
+            var config = BicepTestConstants.BuiltInConfiguration;
+            var resourceId = new IAzResourceProvider.AzResourceIdentifier(
+                "/subscriptions/319b29d4-ae29-421c-b557-eac405f673b6/resourceGroups/armlegs/providers/Microsoft.Storage/storageAccounts/armlegs",
+                "Microsoft.Storage/storageAccounts",
+                "armlegs",
+                "armlegs");
+
+            var resource = await resourceProvider.GetGenericResource(config, resourceId, "2021-06-01", CancellationToken.None);
+        }
+
+        [TestMethod]
+        public async Task AzCli_timeout_lang_server_repro()
+        {
+            var documentUri = DocumentUri.From("/template.bicep");
+            var listeners = CreateListeners();
+            var tokenFactory = new TokenCredentialFactory();
+            var resourceProvider = new AzResourceProvider(tokenFactory);
+
+            using var helper = await StartLanguageServer(listeners, resourceProvider, BicepTestConstants.AzResourceTypeLoader);
+            var client = helper.Client;
+
+            var resourceId = new IAzResourceProvider.AzResourceIdentifier(
+                "/subscriptions/319b29d4-ae29-421c-b557-eac405f673b6/resourceGroups/armlegs/providers/Microsoft.Storage/storageAccounts/armlegs",
+                "Microsoft.Storage/storageAccounts",
+                "armlegs",
+                "armlegs");
+
+            var (file, cursors) = ParserHelper.GetFileWithCursors(@"
+param myParam string = 'test'
+resource myRes 'myRp/provider@2019-01-01' = {
+  name: 'te|st'
+}
+module myMod './module.bicep' = {
+  name: 'test' 
+}
+output myOutput string = 'myOutput'
+");
+            var lineStarts = TextCoordinateConverter.GetLineStarts(file);
+
+            client.TextDocument.DidOpenTextDocument(TextDocumentParamHelper.CreateDidOpenDocumentParams(documentUri, file, 0));
+            await listeners.Diagnostics.WaitNext(10000);
+
+            var cursor = cursors.Single();
+            var result = await client.SendRequest(new InsertResourceParams
+            {
+                TextDocument = documentUri,
+                Position = PositionHelper.GetPosition(lineStarts, cursor),
+                ResourceId = resourceId.FullyQualifiedId,
+            }, default);
+
+            var message = await listeners.ShowMessage.WaitNext(360000);
+            message.Should().HaveMessageAndType(
+                "Failed to find a Bicep type definition for resource of type \"MadeUp.Rp/madeUpTypes\".",
+                MessageType.Error);
         }
     }
 }
