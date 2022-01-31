@@ -1030,7 +1030,7 @@ namespace Bicep.Core.Parsing
 
             var itemsOrTokens = HandleMultilineOrCommas(
                 closingTokenType: TokenType.RightSquare,
-                permitCommas: false,
+                permitCommas: true,
                 parseChildElement: () => ArrayItem());
 
             var closeBracket = Expect(TokenType.RightSquare, b => b.ExpectedCharacter("]"));
@@ -1054,7 +1054,7 @@ namespace Bicep.Core.Parsing
 
             var itemsOrTokens = HandleMultilineOrCommas(
                 closingTokenType: TokenType.RightBrace,
-                permitCommas: false,
+                permitCommas: true,
                 parseChildElement: () => ObjectProperty(expressionFlags));
 
             var closeBrace = Expect(TokenType.RightBrace, b => b.ExpectedCharacter("}"));
