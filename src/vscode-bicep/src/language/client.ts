@@ -10,7 +10,7 @@ import {
   IActionContext,
   parseError,
 } from "vscode-azureextensionui";
-import { ErrorAction, Message, CloseAction } from "vscode-languageclient/node";
+import { ErrorAction, Message, CloseAction, TransportKind } from "vscode-languageclient/node";
 
 const dotnetRuntimeVersion = "6.0";
 const packagedServerPath = "bicepLanguageServer/Bicep.LangServer.dll";
@@ -41,9 +41,10 @@ async function launchLanguageService(
   const languageServerPath = ensureLanguageServerExists(context);
   getLogger().debug(`Found language server at '${languageServerPath}'.`);
 
-  const serverExecutable: lsp.Executable = {
-    command: dotnetCommandPath,
-    args: [languageServerPath],
+  const serverExecutable: lsp.NodeModule = {
+    runtime: dotnetCommandPath,
+    module: languageServerPath,
+    transport: TransportKind.pipe,
     options: {
       env: process.env,
     },

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System;
+using System.Linq;
+using System.IO.Pipes;
 using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ namespace Bicep.LanguageServer
 {
     public class Program
     {
-        public static async Task Main()
+        public static async Task Main(string[] args)
             => await RunWithCancellationAsync(async cancellationToken =>
             {
                 string profilePath = DirHelper.GetTempPath();
@@ -19,10 +21,31 @@ namespace Bicep.LanguageServer
 
                 // the server uses JSON-RPC over stdin & stdout to communicate,
                 // so be careful not to use console for logging!
-                var server = new Server(
-                    Console.OpenStandardInput(),
-                    Console.OpenStandardOutput(),
-                    new Server.CreationOptions());
+
+                var pipeArg = args.FirstOrDefault(x => x.StartsWith(@"--pipe=\\.\pipe\"));
+
+                Server server;
+                if (pipeArg is not null)
+                {
+                    var pipeName = pipeArg.Substring(@"--pipe=\\.\pipe\".Length);
+                    var clientPipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+
+                    await clientPipe.ConnectAsync(cancellationToken);
+
+                    server = new Server(
+                        clientPipe,
+                        clientPipe,
+                        new Server.CreationOptions());
+                }
+                else
+                {
+                    server = new Server(
+                        Console.OpenStandardInput(),
+                        Console.OpenStandardOutput(),
+                        new Server.CreationOptions());
+
+                    throw new InvalidOperationException("ASFASDFASF");
+                }
 
                 await server.RunAsync(cancellationToken);
             });
