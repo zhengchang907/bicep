@@ -505,10 +505,11 @@ namespace Bicep.LanguageServer.Snippets
             // To avoid recomputing spans, we will perform the replacements in reverse order
             foreach (var match in matches.OrderByDescending(x => x.Index))
             {
-                buffer.Replace(oldValue: match.Value,
-                                newValue: match.Groups["snippetPlaceholder"].Value,
-                                startIndex: match.Index,
-                                count: match.Length);
+                buffer.Replace(
+                    oldValue: match.Value,
+                    newValue: match.Groups["snippetPlaceholder"].Value,
+                    startIndex: match.Index,
+                    count: match.Length);
             }
 
             return buffer.ToString();
