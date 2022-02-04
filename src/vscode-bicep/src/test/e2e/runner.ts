@@ -23,10 +23,12 @@ async function captureWriteStreams<T>(
       }
       return true;
     };
-    writeStreams.forEach((ws) => (ws.write = write));
+    writeStreams.forEach((ws) => Object.assign(ws, { write }));
     return [await fn(), outputs.join("")];
   } finally {
-    writeStreams.forEach((ws, i) => (ws.write = originalWrites[i]));
+    writeStreams.forEach((ws, i) =>
+      Object.assign(ws, { write: originalWrites[i] })
+    );
   }
 }
 
