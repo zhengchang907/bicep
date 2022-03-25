@@ -41,7 +41,7 @@ export async function findOrCreateActiveBicepFile(
   getLogger().debug(
     `folders.length: ${String(workspace.workspaceFolders?.length)}`
   );
-  if (workspace.workspaceFolders?.length > 0) {
+  if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
     getLogger().debug(
       `folders[0]: ${String(
         (workspace.workspaceFolders ?? [])[0].uri.toString()
