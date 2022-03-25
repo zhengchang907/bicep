@@ -13,6 +13,7 @@ import * as path from "path";
 import * as os from "os";
 import * as fse from "fs-extra";
 import { TextDocument, Uri, window, workspace } from "vscode";
+import { getLogger } from "../utils";
 
 type TargetFile =
   | "rightClick"
@@ -32,18 +33,36 @@ export async function findOrCreateActiveBicepFile(
     considerActiveEditor?: boolean;
   }
 ): Promise<Uri> {
+  getLogger().debug(`documentUri: ${String(documentUri?.toString())}`);
+  getLogger().debug(
+    `workspace.workspaceFile: ${String(workspace.workspaceFile?.toString())}`
+  );
+  getLogger().debug(`folders: ${String(workspace.workspaceFolders)}`);
+  getLogger().debug(
+    `folders.length: ${String(workspace.workspaceFolders?.length)}`
+  );
+  getLogger().debug(
+    `folders[0]: ${String(
+      (workspace.workspaceFolders ?? [])[0].uri.toString()
+    )}`
+  );
+
   const properties = <Properties>context.telemetry.properties;
   const ui = context.ui;
 
+  getLogger().debug("asdfg6");
   if (documentUri) {
+    getLogger().debug("asdfg7");
     properties.targetFile = "rightClick";
     return documentUri;
   }
 
   if (options?.considerActiveEditor) {
+    getLogger().debug("asdfg8");
     const activeEditor = window.activeTextEditor;
     if (activeEditor?.document?.languageId === "bicep") {
       properties.targetFile = "activeEditor";
+      getLogger().debug("asdfg9");
       return activeEditor.document.uri;
     }
   }
@@ -55,19 +74,25 @@ export async function findOrCreateActiveBicepFile(
   // If there's only a single Bicep file in the workspace, always use that
   if (bicepFilesInWorkspace.length === 1) {
     properties.targetFile = "singleBicepFile";
+    getLogger().debug("asdfg10");
     return bicepFilesInWorkspace[0];
   }
 
+  getLogger().debug("asdfg1");
   // If there are no Bicep files in the workspace...
   if (bicepFilesInWorkspace.length === 0) {
+    getLogger().debug("asdfg2");
     if (!workspace.workspaceFolders) {
+      getLogger().debug("asdfg3");
       // If there is no workspace open, check the active editor
       const activeEditor = window.activeTextEditor;
       if (activeEditor?.document?.languageId === "bicep") {
         properties.targetFile = "noWorkspaceActiveEditor";
+        getLogger().debug("asdfg4");
         return activeEditor.document.uri;
       }
     }
+    getLogger().debug("asdfg5");
 
     // Otherwise ask to create one...
     return await queryCreateBicepFile(ui, properties);
@@ -80,6 +105,7 @@ export async function findOrCreateActiveBicepFile(
       ? path.relative(workspaceRoot, u.fsPath)
       : path.basename(u.fsPath);
 
+    getLogger().debug("asdfg11");
     return <IAzureQuickPickItem<Uri>>{
       label: relativePath,
       data: u,
@@ -89,6 +115,7 @@ export async function findOrCreateActiveBicepFile(
   const response = await ui.showQuickPick(entries, {
     placeHolder: prompt,
   });
+  getLogger().debug("asdfg12");
   properties.targetFile = "fromWorkspace";
   return response.data;
 }
@@ -97,6 +124,7 @@ async function queryCreateBicepFile(
   ui: IAzureUserInput,
   properties: Properties
 ): Promise<Uri> {
+  getLogger().debug("asdfg13");
   await ui.showWarningMessage(
     "Couldn't find any Bicep files in your workspace. Would you like to create a Bicep file?",
     DialogResponses.yes,
