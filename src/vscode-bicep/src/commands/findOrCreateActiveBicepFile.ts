@@ -41,11 +41,13 @@ export async function findOrCreateActiveBicepFile(
   getLogger().debug(
     `folders.length: ${String(workspace.workspaceFolders?.length)}`
   );
-  getLogger().debug(
-    `folders[0]: ${String(
-      (workspace.workspaceFolders ?? [])[0].uri.toString()
-    )}`
-  );
+  if (workspace.workspaceFolders?.length > 0) {
+    getLogger().debug(
+      `folders[0]: ${String(
+        (workspace.workspaceFolders ?? [])[0].uri.toString()
+      )}`
+    );
+  }
 
   const properties = <Properties>context.telemetry.properties;
   const ui = context.ui;
