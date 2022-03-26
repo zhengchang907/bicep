@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import vscode from "vscode";
 import path from "path";
 import fs from "fs";
@@ -28,9 +29,11 @@ describe("visualizer", (): void => {
     // Give the language server sometime to finish compilation.
     await sleep(2000);
 
+    await executeShowVisualizerCommand(document.uri);
     const viewColumn = await retryWhile(
-      async () => await executeShowVisualizerCommand(document.uri),
-      () => !visualizerIsReady(document.uri)
+      async (): Promise<void> => void 0,
+      () => !visualizerIsReady(document.uri),
+      { interval: 100 }
     );
 
     expect(visualizerIsReady(document.uri)).toBeTruthy();
@@ -46,9 +49,11 @@ describe("visualizer", (): void => {
     // Give the language server sometime to finish compilation.
     await sleep(2000);
 
+    await executeShowVisualizerToSideCommand(document.uri);
     const viewColumn = await retryWhile(
-      async () => await executeShowVisualizerToSideCommand(document.uri),
-      () => !visualizerIsReady(document.uri)
+      async (): Promise<void> => void 0,
+      () => !visualizerIsReady(document.uri),
+      { interval: 100 }
     );
 
     expect(visualizerIsReady(document.uri)).toBeTruthy();

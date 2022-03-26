@@ -33,6 +33,11 @@ export async function findOrCreateActiveBicepFile(
     considerActiveEditor?: boolean;
   }
 ): Promise<Uri> {
+  getLogger().debug(`=====================`);
+  getLogger().debug(
+    `findOrCreateActiveBicepFile: "${prompt}", documentUri=${documentUri}`
+  );
+  getLogger().debug(`prompt: ${prompt}`);
   getLogger().debug(`documentUri: ${String(documentUri?.toString())}`);
   getLogger().debug(
     `workspace.workspaceFile: ${String(workspace.workspaceFile?.toString())}`
@@ -56,6 +61,7 @@ export async function findOrCreateActiveBicepFile(
   if (documentUri) {
     getLogger().debug("asdfg7");
     properties.targetFile = "rightClick";
+    getLogger().debug(properties.targetFile);
     return documentUri;
   }
 
@@ -65,6 +71,7 @@ export async function findOrCreateActiveBicepFile(
     if (activeEditor?.document?.languageId === "bicep") {
       properties.targetFile = "activeEditor";
       getLogger().debug("asdfg9");
+      getLogger().debug(properties.targetFile);
       return activeEditor.document.uri;
     }
   }
@@ -76,6 +83,7 @@ export async function findOrCreateActiveBicepFile(
   // If there's only a single Bicep file in the workspace, always use that
   if (bicepFilesInWorkspace.length === 1) {
     properties.targetFile = "singleBicepFile";
+    getLogger().debug(properties.targetFile);
     getLogger().debug("asdfg10");
     return bicepFilesInWorkspace[0];
   }
@@ -90,6 +98,7 @@ export async function findOrCreateActiveBicepFile(
       const activeEditor = window.activeTextEditor;
       if (activeEditor?.document?.languageId === "bicep") {
         properties.targetFile = "noWorkspaceActiveEditor";
+        getLogger().debug(properties.targetFile);
         getLogger().debug("asdfg4");
         return activeEditor.document.uri;
       }
@@ -119,6 +128,7 @@ export async function findOrCreateActiveBicepFile(
   });
   getLogger().debug("asdfg12");
   properties.targetFile = "fromWorkspace";
+  getLogger().debug(properties.targetFile);
   return response.data;
 }
 
@@ -153,6 +163,7 @@ async function queryCreateBicepFile(
   }
 
   properties.targetFile = "new";
+  getLogger().debug(properties.targetFile);
   await fse.writeFile(
     path,
     "@description('Location of all resources')\nparam location string = resourceGroup().location\n",
