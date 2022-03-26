@@ -11,7 +11,7 @@ import {
   executeShowVisualizerCommand,
   executeShowVisualizerToSideCommand,
 } from "./commands";
-import { retryWhile, sleep } from "../utils/time";
+import { sleep, until } from "../utils/time";
 import { expectDefined } from "../utils/assert";
 
 const extensionLogPath = path.join(__dirname, "../../../bicep.log");
@@ -32,19 +32,17 @@ describe("visualizer", (): void => {
     await sleep(2000);
     console.log(`asdfg22`);
 
-    await executeShowVisualizerCommand(document.uri);
-    console.log(`asdfg23`);
-    const viewColumn = await retryWhile(
-      async (): Promise<void> => void 0,
-      () => {
-        console.log(`asdfg23.5`);
-        return !visualizerIsReady(document.uri);
-      },
-      { interval: 100 }
-    );
+    const viewColumn = await executeShowVisualizerCommand(document.uri);
+    await until(() => visualizerIsReady(document.uri), {
+      interval: 100,
+      timeoutMs: 0,
+    });
     console.log(`asdfg24`);
-
-    expect(visualizerIsReady(document.uri)).toBeTruthy();
+    if (!visualizerIsReady(document.uri)) {
+      throw new Error(
+        `Expected visualizer to be ready for ${document.uri.toString()}`
+      );
+    }
     console.log(`asdfg25`);
     expectDefined(viewColumn);
     console.log(`asdfg26`);
@@ -62,23 +60,21 @@ describe("visualizer", (): void => {
     // Give the language server sometime to finish compilation.
     await sleep(2000);
     console.log(`asdfg32`);
-    await executeShowVisualizerToSideCommand(document.uri);
+    const viewColumn = await executeShowVisualizerToSideCommand(document.uri);
     console.log(`asdfg33`);
-    let b: boolean;
-    const viewColumn = await retryWhile(
-      async (): Promise<void> => void 0,
-      () => {
-        console.log(`asdfg34`);
-        b = visualizerIsReady(document.uri);
-        return !b;
-      },
-      { interval: 100 }
-    );
+    await until(() => visualizerIsReady(document.uri), {
+      interval: 100,
+      timeoutMs: 0,
+    });
     console.log(`asdfg35`);
     let a = visualizerIsReady(document.uri);
     a = !!a;
     console.log(a);
-    expect(visualizerIsReady(document.uri)).toBeTruthy();
+    if (!visualizerIsReady(document.uri)) {
+      throw new Error(
+        `Expected visualizer to be ready for ${document.uri.toString()}`
+      );
+    }
     console.log(`asdfg36`);
     expectDefined(viewColumn);
     expect(viewColumn).toBe(vscode.ViewColumn.Beside);

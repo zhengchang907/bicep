@@ -9,13 +9,15 @@ export async function retryWhile<T>(
   predicate: (result: T) => boolean,
   retryOptions?: Readonly<{
     interval?: number;
-    timeLimitMs?: number;
+    timeout?: number;
   }>
 ): Promise<T> {
   let result = await func();
 
+  // eslint-disable-next-line no-debugger
+  debugger;
   const interval = retryOptions?.interval ?? 2000;
-  let count = (retryOptions?.timeLimitMs ?? 10000) / interval;
+  let count = (retryOptions?.timeout ?? 10000) / interval;
 
   while (predicate(result)) {
     if (count-- <= 0) {
@@ -26,4 +28,18 @@ export async function retryWhile<T>(
   }
 
   return result;
+}
+
+export async function until(
+  predicate: () => boolean,
+  retryOptions?: Readonly<{
+    interval?: number;
+    timeoutMs?: number;
+  }>
+): Promise<void> {
+  await retryWhile(
+    async () => void 0,
+    () => !predicate(),
+    retryOptions
+  );
 }
