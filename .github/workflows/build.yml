@@ -82,22 +82,6 @@ jobs:
       - name: Publish Bicep
         run: dotnet publish --configuration ${{ matrix.configuration }} --self-contained true -p:PublishTrimmed=true -p:PublishSingleFile=true -p:TrimmerDefaultAction=copyused -p:SuppressTrimAnalysisWarnings=true -r ${{ matrix.rid }} ./src/Bicep.Cli/Bicep.Cli.csproj
 
-      - name: Run Bicep E2E Tests
-        if: ${{ matrix.rid != 'linux-musl-x64' && matrix.runTests == 'true' }}
-        run: npm ci && npm test
-        env:
-          BICEP_CLI_EXECUTABLE: ../../../Bicep.Cli/bin/${{ matrix.configuration }}/net6.0/${{ matrix.rid }}/publish/bicep
-        working-directory: ./src/Bicep.Cli.E2eTests
-
-      - name: Run Bicep E2E Tests (linux-musl-x64)
-        if: ${{ matrix.rid == 'linux-musl-x64' && matrix.runTests == 'true' }}
-        uses: docker://mcr.microsoft.com/azure-cli:latest
-        with:
-          entrypoint: sh
-          args: -c "apk add --update nodejs npm && npm ci --prefix ./src/Bicep.Cli.E2eTests && npm test --prefix ./src/Bicep.Cli.E2eTests"
-        env:
-          BICEP_CLI_EXECUTABLE: ../../../Bicep.Cli/bin/${{ matrix.configuration }}/net6.0/${{ matrix.rid }}/publish/bicep
-      
       - name: Upload Language Server
         uses: actions/upload-artifact@v2
         if: ${{ matrix.publishLanguageServer == 'true' }}
@@ -148,9 +132,6 @@ jobs:
           configuration: 'release'
         - os: 'ubuntu-latest'
           rid: 'linux-x64'
-          configuration: 'release'
-        - os: 'ubuntu-latest'
-          rid: 'linux-musl-x64'
           configuration: 'release'
         - os: 'macos-latest'
           rid: 'osx-x64'
