@@ -33,39 +33,15 @@ jobs:
           configuration: 'release'
           publishLanguageServer: 'false'
           publishPackages: 'false'
-          runTests: 'true'
+          runTests: 'false'
         - os: 'ubuntu-latest'
           rid: 'linux-x64'
           configuration: 'release'
           publishLanguageServer: 'true'
           publishPackages: 'true'
-          runTests: 'true'
-        - os: 'ubuntu-latest'
-          rid: 'linux-musl-x64'
-          configuration: 'release'
-          publishLanguageServer: 'false'
-          publishPackages: 'false'
-          runTests: 'true'
+          runTests: 'false'
         - os: 'macos-latest'
           rid: 'osx-x64'
-          configuration: 'release'
-          publishLanguageServer: 'false'
-          publishPackages: 'false'
-          runTests: 'true'
-        - os: 'ubuntu-latest'
-          rid: 'linux-arm64'
-          configuration: 'release'
-          publishLanguageServer: 'false'
-          publishPackages: 'false'
-          runTests: 'false'
-        - os: 'ubuntu-latest'
-          rid: 'win-arm64'
-          configuration: 'release'
-          publishLanguageServer: 'false'
-          publishPackages: 'false'
-          runTests: 'false'
-        - os: 'ubuntu-latest'
-          rid: 'osx-arm64'
           configuration: 'release'
           publishLanguageServer: 'false'
           publishPackages: 'false'
@@ -201,58 +177,6 @@ jobs:
         if: ${{ matrix.rid != 'win-x64' }}
         run: chmod +x ./src/Bicep.Cli.E2eTests/src/temp/bicep-cli/bicep
 
-      - name: Run Bicep E2E Tests
-        if: ${{ matrix.rid != 'linux-musl-x64' }}
-        run: npm ci && npm test
-        env:
-          BICEP_CLI_EXECUTABLE: ../../../Bicep.Cli.E2eTests/src/temp/bicep-cli/bicep
-        working-directory: ./src/Bicep.Cli.E2eTests
-
-      - name: Run Bicep Live E2E Tests
-        if: ${{ matrix.rid != 'linux-musl-x64' }}
-        run: npm ci && npm run test:live
-        env:
-          BICEP_CLI_EXECUTABLE: ../../../Bicep.Cli.E2eTests/src/temp/bicep-cli/bicep
-        working-directory: ./src/Bicep.Cli.E2eTests
-
-      - name: Run Bicep Live E2E Tests (linux-musl-x64)
-        if: ${{ matrix.rid == 'linux-musl-x64' }}
-        uses: docker://mcr.microsoft.com/azure-cli:latest
-        with:
-          entrypoint: sh
-          args: -c "apk add --update nodejs npm && npm ci --prefix ./src/Bicep.Cli.E2eTests && npm run test:live --prefix ./src/Bicep.Cli.E2eTests"
-        env:
-          BICEP_CLI_EXECUTABLE: ../../../Bicep.Cli.E2eTests/src/temp/bicep-cli/bicep
-
-  build-windows-setup:
-    name: 'Build Windows Setup'
-    runs-on: 'windows-latest'
-    needs: build-bicep
-
-    steps:
-      - uses: actions/checkout@v2.4.0
-        with:
-          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-          submodules: true
-
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1.9.0
-      
-      - name: Download Bicep CLI
-        uses: actions/download-artifact@v2
-        with:
-          name: bicep-release-win-x64
-          path: ./src/installer-win/bicep
-      
-      - name: Build Windows Installer
-        run: dotnet build --configuration release ./src/installer-win/installer.proj
-      
-      - name: Upload Windows Installer
-        uses: actions/upload-artifact@v2
-        with:
-          name: bicep-setup-win-x64
-          path: ./src/installer-win/bin/release/net472/bicep-setup-win-x64.exe
-          if-no-files-found: error
 
   build-packages:
     name: 'Build Packages (${{ matrix.rid }})'
@@ -312,11 +236,6 @@ jobs:
         run: npm run compile
         working-directory: ./src/Bicep.MSBuild.E2eTests
 
-      - name: Run lint
-        if: ${{ matrix.runTests == 'true' }}
-        run: npm run lint
-        working-directory: ./src/Bicep.MSBuild.E2eTests
-
       - name: Download Bicep CLI
         uses: actions/download-artifact@v2
         with:
@@ -345,11 +264,6 @@ jobs:
         with:
           name: bicep-nupkg-${{ matrix.rid }}
           path: ./src/Bicep.MSBuild.E2eTests/examples/local-packages
-
-      - name: Run E2E tests
-        if: ${{ matrix.runTests == 'true' }}
-        run: npm run test
-        working-directory: ./src/Bicep.MSBuild.E2eTests
 
   build-vsix:
     name: 'Build VSIX'
@@ -388,18 +302,6 @@ jobs:
         run: npm ci
         working-directory: ./src/vscode-bicep
         
-      - name: Run lint
-        run: npm run lint
-        working-directory: ./src/vscode-bicep
-          
-      - name: Run unit tests
-        run: npm run test:unit
-        working-directory: ./src/vscode-bicep
-
-      - name: Run snapshot tests
-        run: npm run test:snapshot
-        working-directory: ./src/vscode-bicep
-
       - name: Download Language Server
         uses: actions/download-artifact@v2
         with:
@@ -435,92 +337,3 @@ jobs:
         with:
           flags: typescript
           directory: ./src/vscode-bicep/coverage
-
-      - name: Create VSIX
-        run: npm run package
-        if: runner.os == 'Linux'
-        working-directory: ./src/vscode-bicep
-
-      - name: Upload VSIX
-        uses: actions/upload-artifact@v2
-        if: runner.os == 'Linux'
-        with:
-          name: vscode-bicep.vsix
-          path: ./src/vscode-bicep/vscode-bicep.vsix
-          if-no-files-found: error
-
-  build-playground:
-    name: 'Build Playground'
-    runs-on: 'ubuntu-latest'
-
-    steps:
-      - uses: actions/checkout@v2.4.0
-        with:
-          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-          submodules: true
-
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1.9.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2.5.1
-        with:
-          node-version: 14.x
-      
-      - name: npm ci
-        run: npm ci
-        working-directory: ./src/playground
-
-      - name: Run lint
-        run: npm run lint
-        working-directory: ./src/playground
-
-      - name: Build
-        run: npm run package
-        working-directory: ./src/playground
-
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: playground
-          path: ./src/playground/dist/*
-          if-no-files-found: error
-
-  build-grammars:
-    name: 'Build Grammars'
-    runs-on: 'ubuntu-latest'
-
-    steps:
-      - uses: actions/checkout@v2.4.0
-        with:
-          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-          submodules: true
-
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1.9.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2.5.1
-        with:
-          node-version: 14.x
-      
-      - name: TextMate Grammar
-        run: |
-          npm ci
-          npm run lint
-          npm test
-        working-directory: ./src/textmate
-      
-      - name: HighlightJs Grammar
-        run: |
-          npm ci
-          npm run lint
-          npm test
-        working-directory: ./src/highlightjs
-      
-      - name: Monarch Grammar
-        run: |
-          npm ci
-          npm run lint
-          npm run build
-        working-directory: ./src/monarch
