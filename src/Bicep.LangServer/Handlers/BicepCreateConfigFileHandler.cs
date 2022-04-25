@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -9,6 +9,7 @@ using Bicep.Core.Configuration;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 
 namespace Bicep.LanguageServer.Handlers
 {
@@ -24,9 +25,11 @@ namespace Bicep.LanguageServer.Handlers
     public class BicepCreateConfigFileHandler : IJsonRpcRequestHandler<BicepCreateConfigParams, bool>
     {
         private readonly ILogger<BicepCreateConfigFileHandler> logger;
+        private readonly ILanguageServerFacade server;
 
-        public BicepCreateConfigFileHandler(ILogger<BicepCreateConfigFileHandler> logger)
+        public BicepCreateConfigFileHandler(ILanguageServerFacade server, ILogger<BicepCreateConfigFileHandler> logger)
         {
+            this.server = server;
             this.logger = logger;
         }
 
@@ -41,6 +44,8 @@ namespace Bicep.LanguageServer.Handlers
             this.logger.LogTrace($"Writing new configuration file to {destinationPath}");
             string defaultBicepConfig = DefaultBicepConfigHelper.GetDefaultBicepConfig();
             await File.WriteAllTextAsync(destinationPath, defaultBicepConfig);
+
+            await BicepEditLinterRuleCommandHandler.AddAndSelectRuleLevel(server, destinationPath, DefaultBicepConfigHelper.DefaultRuleCode);
             return true;
         }
     }

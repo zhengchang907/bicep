@@ -1,15 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+//asdfg content modified
+
 import { Uri, window } from "vscode";
 import path from "path";
 import fse from "fs-extra";
 import os from "os";
 import {
+  executeAcceptSelectedSuggestion,
   executeCloseAllEditors,
   executeCreateConfigFileCommand,
+  executeSelectNextSuggestion,
 } from "./commands";
 import {} from "fs";
+import { normalizeLineEndings } from "../utils/normalizeLineEndings";
+import { testScope } from "../utils/testScope";
 
 describe("bicep.createConfigFile", (): void => {
   afterEach(async () => {
@@ -58,6 +64,46 @@ describe("bicep.createConfigFile", (): void => {
       if (!editor) {
         throw new Error("New config file should be opened in a visible editor");
       }
+
+      //asdfg synchronize with snippet test
+      const expectedAfterInsertion = `{
+        // See https://aka.ms/bicep/config for more information on Bicep configuration options
+        // Press CTRL+SPACE/CMD+SPACE at any location to see Intellisense suggestions
+        "analyzers": {
+            "core": {
+                "rules": {
+                    "no-unused-params": {
+                        "level": "warning"
+                    }
+                }
+            }
+        }
+    }
+    `;
+
+      const textAfterInsertion = editor.document.getText();
+      expect(normalizeLineEndings(textAfterInsertion)).toBe(
+        normalizeLineEndings(expectedAfterInsertion)
+      );
+
+      await testScope("Verify inserted snippet", () => {
+        const actualText = editor.document.getText();
+        expect(normalizeLineEndings(actualText)).toBe(
+          normalizeLineEndings(expectedAfterInsertion)
+        );
+      });
+
+      // Verify that vscode is in an "insertion" state with the dropdown for the first rule open to show the available diagnostic levels (the current one should be "warning").
+      // Verify this by moving down to the next suggestion ("off") and selecting it`
+      const expectedAfterSelectingOffInsteadOfWarning =
+        expectedAfterInsertion.replace(/warning/, "off");
+      await executeSelectNextSuggestion();
+      await executeAcceptSelectedSuggestion();
+      const textAfterSelectingOffInsteadOfWarningtext =
+        editor.document.getText();
+      expect(
+        normalizeLineEndings(textAfterSelectingOffInsteadOfWarningtext)
+      ).toBe(normalizeLineEndings(expectedAfterSelectingOffInsteadOfWarning));
     } finally {
       fse.rmdirSync(tempFolder, {
         recursive: true,
