@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -24,6 +24,10 @@ namespace Bicep.LanguageServer.Handlers
     /// <summary>
     /// Handles the internal command for code actions to edit a particular linter rule in the bicepconfig.json file
     /// </summary>
+    /// <remarks>
+    /// Using ExecuteTypedResponseCommandHandlerBase instead of IJsonRpcRequestHandler because IJsonRpcRequestHandler will throw "Content modified" if text changes are detected, and for this command
+    /// that is expected.
+    /// </remarks>
     public class BicepEditLinterRuleCommandHandler : ExecuteTypedCommandHandlerBase<DocumentUri, string, string>
     {
         private readonly string DefaultBicepConfig;
@@ -31,7 +35,7 @@ namespace Bicep.LanguageServer.Handlers
         private readonly ITelemetryProvider telemetryProvider;
 
         public BicepEditLinterRuleCommandHandler(ISerializer serializer, ILanguageServerFacade server, ITelemetryProvider telemetryProvider)
-            : base(LanguageConstants.EditLinterRuleCommandName, serializer)
+            : base(LangServerConstants.EditLinterRuleCommandName, serializer)
         {
             DefaultBicepConfig = DefaultBicepConfigHelper.GetDefaultBicepConfig();
             this.server = server;
