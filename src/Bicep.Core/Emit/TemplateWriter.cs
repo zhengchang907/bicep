@@ -9,6 +9,7 @@ using System.Linq;
 using Azure.Deployments.Core.Helpers;
 using Azure.Deployments.Expression.Expressions;
 using Azure.Deployments.Core.Definitions.Schema;
+using Bicep.Core.CodeAnalysis;
 using Bicep.Core.Extensions;
 using Bicep.Core.Parsing;
 using Bicep.Core.Semantics;
@@ -156,8 +157,55 @@ namespace Bicep.Core.Emit
 
             foreach (var parameterSymbol in this.context.SemanticModel.Root.ParameterDeclarations)
             {
-                jsonWriter.WritePropertyName(parameterSymbol.Name);
-                this.EmitParameter(jsonWriter, parameterSymbol, emitter);
+                TypeSymbol targetType;
+                ObjectSyntax objectWithDecorators;
+
+                var properties = new List<ObjectPropertySyntax>();
+                if (parameterSymbol.Type is ResourceType resourceType)
+                {
+                    // Encode a resource type as a string parameter with a metadata for the resource type.
+                    targetType = resourceType;
+                    objectWithDecorators = SyntaxFactory.CreateObject(new [] {
+                        SyntaxFactory.CreateObjectProperty("type", SyntaxFactory.CreateStringLiteral(LanguageConstants.String.Name)),
+                        SyntaxFactory.CreateObjectProperty(
+                            LanguageConstants.ParameterMetadataPropertyName,
+                            SyntaxFactory.CreateObject(new[]
+                            {
+                                SyntaxFactory.CreateObjectProperty(
+                                    LanguageConstants.MetadataResourceTypePropertyName,
+                                    SyntaxFactory.CreateStringLiteral(resourceType.TypeReference.FormatName())),
+                            })),
+                    });
+                }
+                else if (SyntaxHelper.TryGetPrimitiveType(parameterSymbol.DeclaringParameter) is TypeSymbol primitiveType)
+                {
+                    targetType = primitiveType;
+                    objectWithDecorators = SyntaxFactory.CreateObject(new [] {
+                        SyntaxFactory.CreateObjectProperty("type", SyntaxFactory.CreateStringLiteral(primitiveType.Name)),
+                    });
+                }
+                else
+                {
+                    // this should have been caught by the type checker long ago
+                    throw new ArgumentException($"Unable to find primitive type for parameter {parameterSymbol.Name}");
+                }
+
+                if (parameterSymbol.DeclaringParameter.Modifier is ParameterDefaultValueSyntax defaultValueSyntax)
+                {
+                    objectWithDecorators = objectWithDecorators.MergeProperty("defaultValue", defaultValueSyntax.DefaultValue);
+                }
+
+                objectWithDecorators = AddDecoratorsToBody(
+                    parameterSymbol.DeclaringParameter,
+                    objectWithDecorators,
+                    targetType);
+
+                var objectOperation = emitter.GetExpressionOperation(objectWithDecorators) as ObjectOperation;
+                var operation = new ParameterOperation(
+                    parameterSymbol.Name,
+                    objectOperation?.Properties ?? ImmutableArray<ObjectPropertyOperation>.Empty);
+
+                emitter.EmitOperation(operation);
             }
 
             jsonWriter.WriteEndObject();
@@ -190,56 +238,6 @@ namespace Bicep.Core.Emit
             }
 
             return result;
-        }
-
-        private void EmitParameter(JsonTextWriter jsonWriter, ParameterSymbol parameterSymbol, ExpressionEmitter emitter)
-        {
-            var declaringParameter = parameterSymbol.DeclaringParameter;
-
-            var properties = new List<ObjectPropertySyntax>();
-            if (parameterSymbol.Type is ResourceType resourceType)
-            {
-                // Encode a resource type as a string parameter with a metadata for the resource type.
-                properties.Add(SyntaxFactory.CreateObjectProperty("type", SyntaxFactory.CreateStringLiteral(LanguageConstants.String.Name)));
-                properties.Add(SyntaxFactory.CreateObjectProperty(
-                    LanguageConstants.ParameterMetadataPropertyName,
-                    SyntaxFactory.CreateObject(new[]
-                    {
-                        SyntaxFactory.CreateObjectProperty(
-                            LanguageConstants.MetadataResourceTypePropertyName,
-                            SyntaxFactory.CreateStringLiteral(resourceType.TypeReference.FormatName())),
-                    })));
-            }
-            else if (SyntaxHelper.TryGetPrimitiveType(declaringParameter) is TypeSymbol primitiveType)
-            {
-                properties.Add(SyntaxFactory.CreateObjectProperty("type", SyntaxFactory.CreateStringLiteral(primitiveType.Name)));
-            }
-            else
-            {
-                // this should have been caught by the type checker long ago
-                throw new ArgumentException($"Unable to find primitive type for parameter {parameterSymbol.Name}");
-            }
-
-            jsonWriter.WriteStartObject();
-
-            var parameterObject = SyntaxFactory.CreateObject(properties);
-
-            if (declaringParameter.Modifier is ParameterDefaultValueSyntax defaultValueSyntax)
-            {
-                parameterObject = parameterObject.MergeProperty("defaultValue", defaultValueSyntax.DefaultValue);
-            }
-
-            parameterObject = AddDecoratorsToBody(declaringParameter, parameterObject, SyntaxHelper.TryGetPrimitiveType(declaringParameter) ?? parameterSymbol.Type);
-
-            foreach (var property in parameterObject.Properties)
-            {
-                if (property.TryGetKeyText() is string propertyName)
-                {
-                    emitter.EmitProperty(propertyName, property.Value);
-                }
-            }
-
-            jsonWriter.WriteEndObject();
         }
 
         private void EmitVariablesIfPresent(JsonTextWriter jsonWriter, ExpressionEmitter emitter)
@@ -310,17 +308,12 @@ namespace Bicep.Core.Emit
                 var namespaceType = context.SemanticModel.GetTypeInfo(import.DeclaringSyntax) as NamespaceType
                     ?? throw new ArgumentException("Imported namespace does not have namespace type");
 
-                jsonWriter.WritePropertyName(import.DeclaringImport.AliasName.IdentifierName);
-                jsonWriter.WriteStartObject();
+                var operation = new ImportOperation(
+                    import.DeclaringImport.AliasName.IdentifierName,
+                    namespaceType,
+                    import.DeclaringImport.Config is null ? null : emitter.GetExpressionOperation(import.DeclaringImport.Config));
 
-                emitter.EmitProperty("provider", namespaceType.Settings.ArmTemplateProviderName);
-                emitter.EmitProperty("version", namespaceType.Settings.ArmTemplateProviderVersion);
-                if (import.DeclaringImport.Config is { } config)
-                {
-                    emitter.EmitProperty("config", config);
-                }
-
-                jsonWriter.WriteEndObject();
+                emitter.EmitOperation(operation);
             }
 
             jsonWriter.WriteEndObject();
@@ -373,7 +366,7 @@ namespace Bicep.Core.Emit
             }
         }
 
-        private ulong? GetBatchSize(StatementSyntax statement)
+        private long? GetBatchSize(StatementSyntax statement)
         {
             var decorator = SemanticModelHelper.TryGetDecoratorInNamespace(
                 context.SemanticModel,
@@ -385,7 +378,12 @@ namespace Bicep.Core.Emit
                 && arguments.Count() == 1
                 && arguments.ToList()[0].Expression is IntegerLiteralSyntax integerLiteral)
             {
-                return integerLiteral.Value;
+                var longValue = integerLiteral.Value switch {
+                    <= long.MaxValue => (long)integerLiteral.Value,
+                    _ => throw new InvalidOperationException($"Integer syntax hs value {integerLiteral.Value} which will overflow"),
+                };
+
+                return longValue;
             }
             return null;
         }
@@ -828,63 +826,54 @@ namespace Bicep.Core.Emit
 
             foreach (var outputSymbol in this.context.SemanticModel.Root.OutputDeclarations)
             {
-                jsonWriter.WritePropertyName(outputSymbol.Name);
-                EmitOutput(jsonWriter, outputSymbol, emitter);
-            }
-
-            jsonWriter.WriteEndObject();
-        }
-
-        private void EmitOutput(JsonTextWriter jsonWriter, OutputSymbol outputSymbol, ExpressionEmitter emitter)
-        {
-            jsonWriter.WriteStartObject();
-
-            var properties = new List<ObjectPropertySyntax>();
-            if (outputSymbol.Type is ResourceType resourceType)
-            {
-                // Resource-typed outputs are encoded as strings
-                emitter.EmitProperty("type", LanguageConstants.String.Name);
-
-                properties.Add(SyntaxFactory.CreateObjectProperty(
-                    LanguageConstants.ParameterMetadataPropertyName,
-                    SyntaxFactory.CreateObject(new[]
-                    {
-                        SyntaxFactory.CreateObjectProperty(
-                            LanguageConstants.MetadataResourceTypePropertyName,
-                            SyntaxFactory.CreateStringLiteral(resourceType.TypeReference.FormatName())),
-                    })));
-            }
-            else
-            {
-                emitter.EmitProperty("type", outputSymbol.Type.Name);
-            }
-
-
-            if (outputSymbol.Value is ForSyntax @for)
-            {
-                emitter.EmitProperty("copy", () => emitter.EmitCopyObject(name: null, @for, @for.Body));
-            }
-            else
-            {
-                if (outputSymbol.Type is ResourceType)
+                TypeSymbol targetType;
+                ObjectSyntax objectWithDecorators;
+                Operation value;
+                if (outputSymbol.Type is ResourceType resourceType)
                 {
+                    // TODO(antmarti): Handle array access here
+                    if (context.SemanticModel.ResourceMetadata.TryLookup(outputSymbol.Value) is not {} resourceMetadata)
+                    {
+                        throw new InvalidOperationException($"Failed to find resource metadata for resource output {outputSymbol.Name}");
+                    }
+
+                    // Resource-typed outputs are encoded as strings
+                    targetType = LanguageConstants.String;
+                    objectWithDecorators = SyntaxFactory.CreateObject(new [] {
+                        SyntaxFactory.CreateObjectProperty(
+                            LanguageConstants.ParameterMetadataPropertyName,
+                            SyntaxFactory.CreateObject(new[]
+                            {
+                                SyntaxFactory.CreateObjectProperty(
+                                    LanguageConstants.MetadataResourceTypePropertyName,
+                                    SyntaxFactory.CreateStringLiteral(resourceType.TypeReference.FormatName())),
+                            })),
+                    });
+
                     // Resource-typed outputs are serialized using the resource id.
-                    var value = new PropertyAccessSyntax(outputSymbol.Value, SyntaxFactory.DotToken, SyntaxFactory.CreateIdentifier("id"));
-                    emitter.EmitProperty("value", value);
+                    value = new ResourceIdOperation(resourceMetadata, null);
                 }
                 else
                 {
-                    emitter.EmitProperty("value", outputSymbol.Value);
+                    targetType = outputSymbol.Type;
+                    objectWithDecorators = SyntaxFactory.CreateObject(Enumerable.Empty<ObjectPropertySyntax>());
+                    value = emitter.GetExpressionOperation(outputSymbol.Value);
                 }
-            }
 
-            // emit any decorators on this output
-            foreach (var (property, val) in AddDecoratorsToBody(
-                outputSymbol.DeclaringOutput,
-                SyntaxFactory.CreateObject(properties),
-                outputSymbol.Type).ToNamedPropertyValueDictionary())
-            {
-                emitter.EmitProperty(property, val);
+                objectWithDecorators = AddDecoratorsToBody(
+                    outputSymbol.DeclaringOutput,
+                    objectWithDecorators,
+                    targetType);
+
+                var objectOperation = emitter.GetExpressionOperation(objectWithDecorators) as ObjectOperation;
+
+                var operation = new OutputOperation(
+                    outputSymbol.Name,
+                    targetType.Name,
+                    value,
+                    objectOperation?.Properties ?? ImmutableArray<ObjectPropertyOperation>.Empty);
+
+                emitter.EmitOperation(operation);
             }
 
             jsonWriter.WriteEndObject();
