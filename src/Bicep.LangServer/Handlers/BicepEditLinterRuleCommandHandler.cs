@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -153,7 +153,8 @@ namespace Bicep.LanguageServer.Handlers
                     TakeFocus = true
                 });
 
-                // If the client supports it, trigger completion of the rule's level value
+                // If the client supports it, trigger completion of the rule's level value (call is ignored
+                //   if the client doesn't know about it)
                 server.SendNotification("bicep/triggerEditorCompletion");
 
                 return true;

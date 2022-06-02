@@ -156,9 +156,9 @@ async function launchLanguageService(
 
   await client.onReady();
 
-  client.onNotification("bicep/triggerEditorCompletion", () => {
-    vscode.commands.executeCommand("editor.action.triggerSuggest");
-  });
+  // client.onNotification("bicep/triggerEditorCompletion", () => {
+  //   vscode.commands.executeCommand("editor.action.triggerSuggest");
+  // });
 
   getLogger().info("Bicep language service ready.");
 
