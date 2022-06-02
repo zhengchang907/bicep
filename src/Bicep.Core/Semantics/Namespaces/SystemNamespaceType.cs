@@ -119,6 +119,13 @@ namespace Bicep.Core.Semantics.Namespaces
                 .WithRequiredParameter("delimiter", TypeHelper.CreateTypeUnion(LanguageConstants.String, LanguageConstants.Array), "The delimiter to use for splitting the string.")
                 .Build(),
 
+            new FunctionOverloadBuilder("join")
+                .WithReturnType(LanguageConstants.String)
+                .WithGenericDescription("Joins multiple strings into a single string, separated using a delimiter.")
+                .WithRequiredParameter("inputArray", new TypedArrayType(LanguageConstants.String, TypeSymbolValidationFlags.Default), "An array of strings to join.")
+                .WithRequiredParameter("delimiter", LanguageConstants.String, "The delimiter to use to join the string.")
+                .Build(),
+
             new FunctionOverloadBuilder("string")
                 .WithReturnType(LanguageConstants.String)
                 .WithGenericDescription("Converts the specified value to a string.")
