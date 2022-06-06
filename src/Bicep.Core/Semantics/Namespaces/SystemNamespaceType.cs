@@ -499,6 +499,33 @@ namespace Bicep.Core.Semantics.Namespaces
                 .WithRequiredParameter("object", LanguageConstants.Object, "The object to return keys and values for")
                 .WithReturnResultBuilder(ItemsResultBuilder, GetItemsReturnType(LanguageConstants.String, LanguageConstants.Any))
                 .Build(),
+
+            new FunctionOverloadBuilder("flatten")
+                .WithGenericDescription("Flattens an array of arrays into an array containing all of the individual array elements in the original order.")
+                .WithVariableParameter("array", LanguageConstants.Array, 0, "TBD")
+                .WithReturnType(LanguageConstants.Array)
+                .Build(),
+
+            new FunctionOverloadBuilder("filter")
+                .WithGenericDescription("Filters an array with a custom filtering function.")
+                .WithRequiredParameter("array", LanguageConstants.Array, "The array to filter")
+                .WithRequiredParameter("lambda", new LambdaType(LanguageConstants.Any, LanguageConstants.Bool), "The filtering function")
+                .WithReturnResultBuilder((binder, fileResolver, diagnostics, arguments, argumentTypes) => {
+                    return new(argumentTypes[0]);
+                }, LanguageConstants.Any)
+                .Build(),
+
+            new FunctionOverloadBuilder("map")
+                .WithGenericDescription("Applies a custom mapping function to each element of an array and returns the result array.")
+                .WithRequiredParameter("array", LanguageConstants.Array, "The array to map")
+                .WithRequiredParameter("lambda", new LambdaType(LanguageConstants.Any, LanguageConstants.Any), "The mapping function")
+                .WithReturnResultBuilder((binder, fileResolver, diagnostics, arguments, argumentTypes) => {
+                    return argumentTypes[1] switch {
+                        LambdaType lambdaType => new(new TypedArrayType(lambdaType.BodyType.Type, TypeSymbolValidationFlags.Default)),
+                        _ => new(LanguageConstants.Any),
+                    };
+                }, LanguageConstants.Any)
+                .Build(),
         }.ToImmutableArray();
 
         private static bool TryGetFileUriWithDiagnostics(IBinder binder, IFileResolver fileResolver, string filePath, SyntaxBase filePathArgument, [NotNullWhen(true)] out Uri? fileUri, [NotNullWhen(false)] out ErrorDiagnostic? error)

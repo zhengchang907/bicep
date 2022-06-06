@@ -701,5 +701,20 @@ namespace Bicep.Core.Syntax
             return new MissingDeclarationSyntax(leadingNodes);
         }
         void ISyntaxVisitor.VisitMissingDeclarationSyntax(MissingDeclarationSyntax syntax) => ReplaceCurrent(syntax, ReplaceMissingDeclarationSyntax);
+
+        protected virtual SyntaxBase ReplaceLambdaSyntax(LambdaSyntax syntax)
+        {
+            var hasChanges = TryRewriteStrict(syntax.Variable, out var variable);
+            hasChanges |= TryRewriteStrict(syntax.Arrow, out var arrow);
+            hasChanges |= TryRewrite(syntax.Body, out var body);
+
+            if (!hasChanges)
+            {
+                return syntax;
+            }
+
+            return new LambdaSyntax(variable, arrow, body);
+        }
+        void ISyntaxVisitor.VisitLambdaSyntax(LambdaSyntax syntax) => ReplaceCurrent(syntax, ReplaceLambdaSyntax);
     }
 }

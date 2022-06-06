@@ -104,6 +104,9 @@ namespace Bicep.Core.TypeSystem
 
                 case FunctionArgumentSyntax functionArgument:
                     return GetFunctionArgumentType(functionArgument);
+
+                case LambdaSyntax lambda:
+                    return GetLambdaType(lambda);
             }
 
             return null;
@@ -367,7 +370,29 @@ namespace Bicep.Core.TypeSystem
             var argIndex = parentFunction.Arguments.IndexOf(syntax);
             var declaredType = functionSymbol.GetDeclaredArgumentType(argIndex);
 
+            if (declaredType is LambdaType declaredLambda &&
+                (functionSymbol.Name == "map" || functionSymbol.Name == "filter") &&
+                argIndex == 1 &&
+                typeManager.GetTypeInfo(parentFunction.Arguments[0]) is ArrayType arrayType)
+            {
+                // TODO implement this properly
+                declaredType = new LambdaType(arrayType.Item, declaredLambda.BodyType);
+            }
+
             return new DeclaredTypeAssignment(declaredType, declaringSyntax: null);
+        }
+
+        private DeclaredTypeAssignment? GetLambdaType(LambdaSyntax syntax)
+        {
+            var parent = this.binder.GetParent(syntax);
+
+            switch (parent)
+            {
+                case FunctionArgumentSyntax:
+                    return GetDeclaredTypeAssignment(parent)?.ReplaceDeclaringSyntax(syntax);
+                default:
+                    return null;
+            }
         }
 
         private DeclaredTypeAssignment? GetArrayItemType(ArrayItemSyntax syntax)

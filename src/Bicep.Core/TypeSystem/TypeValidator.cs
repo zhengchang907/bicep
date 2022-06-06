@@ -92,6 +92,9 @@ namespace Bicep.Core.TypeSystem
                     // values of all types can be assigned to the "any" type
                     return true;
 
+                case (LambdaType, LambdaType):
+                    return true;
+
                 case (IScopeReference, IScopeReference):
                     // checking for valid combinations of scopes happens after type checking. this allows us to provide a richer & more intuitive error message.
                     return true;
@@ -297,7 +300,7 @@ namespace Bicep.Core.TypeSystem
                     .Select(x => NarrowType(config, expression, x.Type)));
             }
 
-            return targetType;
+            return expressionType;
         }
 
         private TypeSymbol NarrowArrayAssignmentType(TypeValidatorConfig config, ArraySyntax expression, ArrayType targetType)
@@ -396,7 +399,7 @@ namespace Bicep.Core.TypeSystem
                     {
                         // no matches
                         var discriminatorCandidates = targetType.UnionMembersByKey.Keys.OrderBy(x => x);
-                        
+
 
                         diagnosticWriter.Write(
                             config.OriginSyntax ?? discriminatorProperty.Value,
@@ -469,7 +472,7 @@ namespace Bicep.Core.TypeSystem
             var missingRequiredProperties = targetType.Properties.Values
                 .Where(p => p.Flags.HasFlag(TypePropertyFlags.Required) && !namedPropertyMap.ContainsKey(p.Name))
                 .ToList();
-                
+
 
             if (missingRequiredProperties.Count > 0)
             {

@@ -637,6 +637,15 @@ namespace Bicep.Core.Parsing
                     functionCall.ArgumentNodes,
                     functionCall.CloseParen);
             }
+
+            if (Check(TokenType.Arrow))
+            {
+                var arrow = this.Expect(TokenType.Arrow, b => b.ExpectedCharacter("=>"));
+                var expression = Expression(expressionFlags);
+
+                return new LambdaSyntax(new LocalVariableSyntax(identifier), arrow, expression);
+            }
+
             // returns variable access
             return new VariableAccessSyntax(identifier);
         }

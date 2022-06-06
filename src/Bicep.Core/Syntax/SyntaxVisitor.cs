@@ -331,6 +331,13 @@ namespace Bicep.Core.Syntax
             this.Visit(syntax.Config);
         }
 
+        public virtual void VisitLambdaSyntax(LambdaSyntax syntax)
+        {
+            this.Visit(syntax.Variable);
+            this.Visit(syntax.Arrow);
+            this.Visit(syntax.Body);
+        }
+
         protected void VisitTokens(IEnumerable<Token> tokens)
         {
             foreach (Token token in tokens)

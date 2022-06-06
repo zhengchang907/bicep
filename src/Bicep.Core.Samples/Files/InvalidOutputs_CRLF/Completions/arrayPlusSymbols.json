@@ -437,6 +437,27 @@
     }
   },
   {
+    "label": "filter",
+    "kind": "function",
+    "documentation": {
+      "kind": "markdown",
+      "value": "```bicep\nfilter(array: array, lambda: any => bool): any\n\n```\nTBD.\n"
+    },
+    "deprecated": false,
+    "preselect": false,
+    "sortText": "3_filter",
+    "insertTextFormat": "snippet",
+    "insertTextMode": "adjustIndentation",
+    "textEdit": {
+      "range": {},
+      "newText": "filter($0)"
+    },
+    "command": {
+      "title": "signature help",
+      "command": "editor.action.triggerParameterHints"
+    }
+  },
+  {
     "label": "first",
     "kind": "function",
     "documentation": {
@@ -455,6 +476,23 @@
     "command": {
       "title": "signature help",
       "command": "editor.action.triggerParameterHints"
+    }
+  },
+  {
+    "label": "flatten",
+    "kind": "function",
+    "documentation": {
+      "kind": "markdown",
+      "value": "```bicep\nflatten(... : array): array\n\n```\nTBD.\n"
+    },
+    "deprecated": false,
+    "preselect": false,
+    "sortText": "3_flatten",
+    "insertTextFormat": "snippet",
+    "insertTextMode": "adjustIndentation",
+    "textEdit": {
+      "range": {},
+      "newText": "flatten()$0"
     }
   },
   {
@@ -833,6 +871,27 @@
     "textEdit": {
       "range": {},
       "newText": "managementGroupResourceId($0)"
+    },
+    "command": {
+      "title": "signature help",
+      "command": "editor.action.triggerParameterHints"
+    }
+  },
+  {
+    "label": "map",
+    "kind": "function",
+    "documentation": {
+      "kind": "markdown",
+      "value": "```bicep\nmap(array: array, lambda: any => any): any\n\n```\nTBD.\n"
+    },
+    "deprecated": false,
+    "preselect": false,
+    "sortText": "3_map",
+    "insertTextFormat": "snippet",
+    "insertTextMode": "adjustIndentation",
+    "textEdit": {
+      "range": {},
+      "newText": "map($0)"
     },
     "command": {
       "title": "signature help",

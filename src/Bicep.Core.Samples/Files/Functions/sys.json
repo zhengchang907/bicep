@@ -397,6 +397,32 @@
     ]
   },
   {
+    "name": "filter",
+    "description": "TBD.",
+    "fixedParameters": [
+      {
+        "name": "array",
+        "description": "The array to filter",
+        "type": "array",
+        "required": true
+      },
+      {
+        "name": "lambda",
+        "description": "The filtering function",
+        "type": "any => bool",
+        "required": true
+      }
+    ],
+    "minimumArgumentCount": 2,
+    "maximumArgumentCount": 2,
+    "flags": "default",
+    "typeSignature": "(array: array, lambda: any => bool): any",
+    "parameterTypeSignatures": [
+      "array: array",
+      "lambda: any => bool"
+    ]
+  },
+  {
     "name": "first",
     "description": "Returns the first element of the array.",
     "fixedParameters": [
@@ -432,6 +458,23 @@
     "typeSignature": "(string: string): string",
     "parameterTypeSignatures": [
       "string: string"
+    ]
+  },
+  {
+    "name": "flatten",
+    "description": "TBD.",
+    "fixedParameters": [],
+    "minimumArgumentCount": 0,
+    "variableParameter": {
+      "namePrefix": "array",
+      "description": "TBD",
+      "type": "array",
+      "minimumCount": 0
+    },
+    "flags": "default",
+    "typeSignature": "(... : array): array",
+    "parameterTypeSignatures": [
+      "... : array"
     ]
   },
   {
@@ -804,6 +847,32 @@
     "parameterTypeSignatures": [
       "filePath: string",
       "[encoding: 'iso-8859-1' | 'us-ascii' | 'utf-16' | 'utf-16BE' | 'utf-8']"
+    ]
+  },
+  {
+    "name": "map",
+    "description": "TBD.",
+    "fixedParameters": [
+      {
+        "name": "array",
+        "description": "The array to map",
+        "type": "array",
+        "required": true
+      },
+      {
+        "name": "lambda",
+        "description": "The mapping function",
+        "type": "any => any",
+        "required": true
+      }
+    ],
+    "minimumArgumentCount": 2,
+    "maximumArgumentCount": 2,
+    "flags": "default",
+    "typeSignature": "(array: array, lambda: any => any): any",
+    "parameterTypeSignatures": [
+      "array: array",
+      "lambda: any => any"
     ]
   },
   {
