@@ -35,10 +35,6 @@ namespace Bicep.Core.PrettyPrint
 
         private readonly Stack<ILinkedDocument> documentStack = new Stack<ILinkedDocument>();
 
-        private bool visitingBlockOpenSyntax;
-
-        private bool visitingBlockCloseSyntax;
-
         private bool visitingSkippedTriviaSyntax;
 
         private bool visitingBrokenStatement;
@@ -322,15 +318,9 @@ namespace Bicep.Core.PrettyPrint
         public override void VisitObjectSyntax(ObjectSyntax syntax) =>
             this.BuildBlock(() =>
             {
-                this.visitingBlockOpenSyntax = true;
                 this.Visit(syntax.OpenBrace);
-                this.visitingBlockOpenSyntax = false;
-
                 this.PushCommaSeparatedList(syntax.Children);
-
-                this.visitingBlockCloseSyntax = true;
                 this.Visit(syntax.CloseBrace);
-                this.visitingBlockCloseSyntax = false;
             });
 
         public override void VisitObjectPropertySyntax(ObjectPropertySyntax syntax) =>
@@ -348,15 +338,9 @@ namespace Bicep.Core.PrettyPrint
         public override void VisitArraySyntax(ArraySyntax syntax) =>
             this.BuildBlock(() =>
             {
-                this.visitingBlockOpenSyntax = true;
                 this.Visit(syntax.OpenBracket);
-                this.visitingBlockOpenSyntax = false;
-
                 this.PushCommaSeparatedList(syntax.Children);
-
-                this.visitingBlockCloseSyntax = true;
                 this.Visit(syntax.CloseBracket);
-                this.visitingBlockCloseSyntax = false;
             });
 
         private static ILinkedDocument Text(string text) =>
@@ -505,19 +489,7 @@ namespace Bicep.Core.PrettyPrint
             }
             else
             {
-                if (this.visitingBlockCloseSyntax)
-                {
-                    // Insert a SingleLine before "}" and "]", which will remove extra newlines before it (by calling PushDocument).
-                    this.PushDocument(SingleLine);
-                }
-
                 this.documentStack.Push(document);
-
-                if (this.visitingBlockOpenSyntax)
-                {
-                    // Add a SingleLine after "{" and "[", which will prevent more newlines from being added after it.
-                    this.documentStack.Push(SingleLine);
-                }
             }
         }
     }

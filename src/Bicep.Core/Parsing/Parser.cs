@@ -1003,11 +1003,13 @@ namespace Bicep.Core.Parsing
                     else if (Check(TokenType.Comma))
                     {
                         itemsOrTokens.Add(reader.Read());
+                        /*
                         if (Check(TokenType.NewLine))
                         {
                             // newlines are optional after commas
                             itemsOrTokens.AddRange(NewLines());
                         }
+                        */
                     }
                     else
                     {
