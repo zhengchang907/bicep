@@ -30,7 +30,7 @@ namespace Bicep.Core.Analyzers.Linter.Rules
         {
             if (model.DeclaredResources.Length > MaxNumber)
             {
-                var firstItem = model.DeclaredResources.Where(r => r.Parent is null).First();
+                var firstItem = model.DeclaredResources.First();
                 return new IDiagnostic[] { CreateDiagnosticForSpan(firstItem.Symbol.NameSyntax.Span, MaxNumber) };
             }
             return Enumerable.Empty<IDiagnostic>();

@@ -13,8 +13,7 @@ namespace Bicep.Core.Semantics.Metadata
     public record DeclaredResourceMetadata(
         ResourceType Type,
         bool IsExistingResource,
-        ResourceSymbol Symbol,
-        ResourceMetadataParent? Parent)
+        ResourceSymbol Symbol)
         : ResourceMetadata(Type, IsExistingResource)
     {
         private readonly ImmutableDictionary<string, SyntaxBase> UniqueIdentifiers = GetUniqueIdentifiers(Type, Symbol);

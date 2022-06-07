@@ -109,8 +109,7 @@ namespace Bicep.Core.Semantics.Metadata
                                 return new DeclaredResourceMetadata(
                                     resourceType,
                                     symbol.DeclaringResource.IsExistingResource(),
-                                    symbol,
-                                    new(parentMetadata, null, true));
+                                    symbol);
                             }
                         }
                         else if (symbol.TryGetBodyPropertyValue(LanguageConstants.ResourceParentPropertyName) is { } referenceParentSyntax)
@@ -128,8 +127,7 @@ namespace Bicep.Core.Semantics.Metadata
                                 return new DeclaredResourceMetadata(
                                     resourceType,
                                     symbol.DeclaringResource.IsExistingResource(),
-                                    symbol,
-                                    new(parentMetadata, indexExpression, false));
+                                    symbol);
                             }
                         }
                         else
@@ -137,8 +135,7 @@ namespace Bicep.Core.Semantics.Metadata
                             return new DeclaredResourceMetadata(
                                 resourceType,
                                 symbol.DeclaringResource.IsExistingResource(),
-                                symbol,
-                                null);
+                                symbol);
                         }
 
                         break;
