@@ -1,22 +1,30 @@
 {
   "name": "Bicep Development Environment",
   "extensions": [
-    "msazurermtools.azurerm-vscode-tools",
-    "ms-azuretools.vscode-bicep",
-    "ms-dotnettools.csharp",
-    "ms-azuretools.vscode-docker",
-    "editorconfig.editorconfig",
-    "github.vscode-pull-request-github"
-  ],
+	"msazurermtools.azurerm-vscode-tools",
+	"ms-azuretools.vscode-bicep",
+	"ms-dotnettools.csharp",
+	"ms-azuretools.vscode-docker",
+	"editorconfig.editorconfig",
+	"github.vscode-pull-request-github"
+],
   "features": {
-    "github-cli": "latest",
-    "azure-cli": "latest",
-    "node": {
-      "version": "lts",
-      "nodeGypDependencies": true
-    },
-    "dotnet": {
-      "version": "6.0"
-    }
-  }
+	"github-cli": "latest",
+	"azure-cli": "latest",
+	"node": {
+		"version": "lts",
+		"nodeGypDependencies": true
+	},
+	"dotnet": {
+		"version": "6.0"
+	}
+},
+"build": {
+	"dockerfile": "Dockerfile",
+	"args": {
+		"VARIANT": "6.0-bullseye",
+		"NODE_VERSION": "lts/*"
+	}
+},
+"remoteUser": "vscode"
 }

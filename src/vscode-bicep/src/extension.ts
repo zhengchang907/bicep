@@ -10,6 +10,7 @@ import { registerUIExtensionVariables } from "@microsoft/vscode-azext-utils";
 import { TreeManager } from "./tree/TreeManager";
 import {
   BuildCommand,
+  LintCommand,
   CommandManager,
   DeployCommand,
   ForceModulesRestoreCommand,
